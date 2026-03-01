@@ -134,7 +134,7 @@ export default function FlashSales() {
     };
 
     return (
-        <section className="mx-auto max-w-310 px-4 pt-14 pb-16 md:px-8">
+        <section className="mx-auto max-w-310 px-4 py-20 md:px-8">
             <div className="mb-5 flex items-center gap-3">
                 <div className="h-9 w-4 rounded bg-(--color-primary-btn)" />
                 <h5 className="font-semibold text-(--color-primary-btn)">Today&apos;s</h5>

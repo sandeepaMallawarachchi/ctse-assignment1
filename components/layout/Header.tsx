@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Heart, Menu, Search, ShoppingCart, X } from "lucide-react";
 import { useState } from "react";
@@ -41,11 +42,7 @@ export default function Header() {
       <div className="mx-auto max-w-[1240px] px-4 md:px-8">
         <div className="flex items-center justify-between pb-4 pt-2">
           <Link href="/" className="font-bold text-[var(--color-text-1)]">
-            <img
-              src="/logo.png"
-              alt="Logo"
-              width={100}
-            />
+            <Image src="/logo.webp" alt="Logo" width={100} height={36} />
           </Link>
 
           <nav className="hidden items-center gap-10 lg:flex">
