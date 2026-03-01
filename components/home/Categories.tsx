@@ -9,6 +9,11 @@ type Category = {
   subCategories?: string[];
 };
 
+type CategoriesProps = {
+  withBorder?: boolean;
+  heightClassName?: string;
+};
+
 const categories: Category[] = [
   {
     id: "womens-fashion",
@@ -31,7 +36,10 @@ const categories: Category[] = [
   { id: "gaming", label: "Gaming" },
 ];
 
-export default function Categories() {
+export default function Categories({
+  withBorder = true,
+  heightClassName = "h-[384px]",
+}: CategoriesProps) {
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
 
   const toggleCategory = (categoryId: string, hasChildren: boolean) => {
@@ -43,8 +51,8 @@ export default function Categories() {
   };
 
   return (
-    <aside className="border-r border-black/15 pr-3 md:pr-6">
-      <div className="h-[384px] overflow-y-auto py-2">
+    <aside className={withBorder ? "border-r border-black/15 pr-3 md:pr-6" : ""}>
+      <div className={`${heightClassName} overflow-y-auto py-2`}>
         <ul className="space-y-1.5">
           {categories.map((category) => {
             const hasChildren = Boolean(category.subCategories?.length);

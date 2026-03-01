@@ -10,8 +10,8 @@ export default function Footer() {
     <footer className="mt-14 bg-black text-white">
       <div className="mx-auto max-w-[1240px] px-4 py-14 md:px-8 md:py-18">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="space-y-5">
-            <img src="/logo.webp" alt="Exclusive logo" width={150} className="w-[120px]" />
+          <div className="space-y-5 text-center md:text-left">
+            <img src="/logo.webp" alt="Exclusive logo" width={150} className="w-[120px] mx-auto md:mx-0" />
             <h3 className="font-medium">Subscribe</h3>
             <p className="text-white/95">Get 10% off your first order</p>
 
@@ -27,14 +27,14 @@ export default function Footer() {
             </form>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 md:text-left text-center">
             <h3 className="font-medium">Support</h3>
             <p className="leading-relaxed text-white/95">123, Colombo, Sri Lanka</p>
             <p className="text-white/95">exclusive@gmail.com</p>
             <p className="text-white/95">+1123456789</p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 md:text-left text-center">
             <h3 className="font-medium">Account</h3>
             <div className="space-y-3">
               {accountLinks.map((item) => (
@@ -47,7 +47,7 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 md:text-left text-center">
             <h3 className="font-medium">Quick Link</h3>
             <div className="space-y-3">
               {quickLinks.map((item) => (
@@ -60,11 +60,11 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 md:text-left text-center">
             <h3 className="font-medium">Download App</h3>
             <p className="text-base text-white/70">Save $3 with App New User</p>
 
-            <div className="flex items-start gap-3">
+            <div className="flex md:items-start md:justify-start justify-center gap-3">
               <Image src="/footer/qr.webp" alt="QR code" width={90} height={90} className="h-[90px] w-[90px]" />
 
               <div className="space-y-2">
@@ -89,7 +89,7 @@ export default function Footer() {
               </div>
             </div>
 
-            <div className="flex items-center gap-5 pt-1">
+            <div className="flex items-center md:justify-start justify-center gap-5 pt-1">
               <Link href="#" aria-label="Facebook" className="text-white/95 hover:text-white">
                 <Facebook size={26} strokeWidth={1.8} />
               </Link>
