@@ -13,6 +13,9 @@ export type Product = {
   rating: number;
   reviewCount: number;
   showAddToCart?: boolean;
+  badgeLabel?: string;
+  badgeVariant?: "primary" | "success";
+  colorOptions?: string[];
 };
 
 type ProductCardProps = {
@@ -77,13 +80,16 @@ export default function ProductCard({
 }: ProductCardProps) {
   const shouldShowDiscount = (product.discountPercent ?? 0) > 0;
   const shouldShowAddToCart = product.showAddToCart ?? true;
+  const badgeLabel = product.badgeLabel ?? (shouldShowDiscount ? `-${product.discountPercent}%` : null);
+  const badgeClassName =
+    product.badgeVariant === "success" ? "bg-(--color-btn-3) text-white" : "bg-(--color-primary-btn) text-white";
 
   return (
     <article className="w-[250px] shrink-0">
       <div className="group relative h-[230px] overflow-hidden rounded bg-(--color-secondary)">
-        {shouldShowDiscount ? (
-          <div className="absolute left-3 top-3 rounded bg-(--color-primary-btn) px-2.5 py-1 text-white">
-            <h6>-{product.discountPercent}%</h6>
+        {badgeLabel ? (
+          <div className={`absolute left-3 top-3 rounded px-2.5 py-1 ${badgeClassName}`}>
+            <h6>{badgeLabel}</h6>
           </div>
         ) : null}
 
@@ -135,6 +141,21 @@ export default function ProductCard({
       </div>
 
       <Rating rating={product.rating} reviewCount={product.reviewCount} />
+
+      {product.colorOptions?.length ? (
+        <div className="mt-2 flex items-center gap-2">
+          {product.colorOptions.map((color, index) => (
+            <span
+              key={`${product.id}-${color}-${index}`}
+              className={`inline-flex h-5 w-5 rounded-full border-2 ${
+                index === 0 ? "border-black" : "border-transparent"
+              }`}
+              style={{ backgroundColor: color }}
+              aria-hidden="true"
+            />
+          ))}
+        </div>
+      ) : null}
     </article>
   );
 }
