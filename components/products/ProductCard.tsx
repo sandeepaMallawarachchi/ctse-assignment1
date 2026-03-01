@@ -2,17 +2,18 @@
 
 import { Eye, Heart, Star } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export type Product = {
   id: number;
   name: string;
+  slug?: string;
   imageUrl: string;
   discountPercent?: number;
   currentPrice: number;
   previousPrice: number;
   rating: number;
   reviewCount: number;
-  showAddToCart?: boolean;
   badgeLabel?: string;
   badgeVariant?: "primary" | "success";
   colorOptions?: string[];
@@ -44,7 +45,10 @@ function IconButton({
     <button
       type="button"
       aria-label={label}
-      onClick={onClick}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick?.();
+      }}
       className="flex h-8 w-8 items-center justify-center rounded-full bg-(--color-primary) text-(--color-text-1) transition hover:bg-(--color-primary-2) hover:text-white"
     >
       {children}
@@ -72,21 +76,45 @@ function Rating({ rating, reviewCount }: { rating: number; reviewCount: number }
   );
 }
 
+function toSlug(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export default function ProductCard({
   product,
   onWishlistClick,
   onQuickViewClick,
   onAddToCartClick,
 }: ProductCardProps) {
+  const router = useRouter();
   const shouldShowDiscount = (product.discountPercent ?? 0) > 0;
-  const shouldShowAddToCart = product.showAddToCart ?? true;
   const badgeLabel = product.badgeLabel ?? (shouldShowDiscount ? `-${product.discountPercent}%` : null);
   const badgeClassName =
     product.badgeVariant === "success" ? "bg-(--color-btn-3) text-white" : "bg-(--color-primary-btn) text-white";
+  const productSlug = product.slug ?? toSlug(product.name);
+
+  const navigateToDetails = () => {
+    router.push(`/products/${productSlug}`);
+  };
 
   return (
     <article className="w-[250px] shrink-0">
-      <div className="group relative h-[230px] overflow-hidden rounded bg-(--color-secondary)">
+      <div
+        className="group relative h-[230px] cursor-pointer overflow-hidden rounded bg-(--color-secondary)"
+        onClick={navigateToDetails}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            navigateToDetails();
+          }
+        }}
+      >
         {badgeLabel ? (
           <div className={`absolute left-3 top-3 rounded px-2.5 py-1 ${badgeClassName}`}>
             <h6>{badgeLabel}</h6>
@@ -102,7 +130,13 @@ export default function ProductCard({
           </IconButton>
           <IconButton
             label={`Quick view ${product.name}`}
-            onClick={() => onQuickViewClick?.(product.id)}
+            onClick={() => {
+              if (onQuickViewClick) {
+                onQuickViewClick(product.id);
+                return;
+              }
+              navigateToDetails();
+            }}
           >
             <Eye size={16} strokeWidth={1.8} />
           </IconButton>
@@ -118,25 +152,28 @@ export default function ProductCard({
           />
         </div>
 
-        {shouldShowAddToCart ? (
-          <button
-            type="button"
-            onClick={() => onAddToCartClick?.(product.id)}
-            className="absolute bottom-0 left-0 w-full translate-y-full bg-(--color-btn-2) py-2 font-medium text-white opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100"
-          >
-            Add To Cart
-          </button>
-        ) : null}
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onAddToCartClick?.(product.id);
+          }}
+          className="absolute bottom-0 left-0 w-full translate-y-full bg-(--color-btn-2) py-2 font-medium text-white opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100"
+        >
+          Add To Cart
+        </button>
       </div>
 
-      <h3 className="mt-3 leading-tight font-medium text-(--color-text-1)">{product.name}</h3>
+      <h5 className="mt-3 cursor-pointer leading-tight font-medium text-(--color-text-1)" onClick={navigateToDetails}>
+        {product.name}
+      </h5>
 
       <div className="mt-1.5 flex items-center gap-3 font-medium">
-        <h3 className="text-(--color-primary-btn)">{priceFormatter.format(product.currentPrice)}</h3>
+        <h5 className="text-(--color-primary-btn)">{priceFormatter.format(product.currentPrice)}</h5>
         {product.previousPrice > 0 ? (
-          <h3 className="text-(--color-text-1)/50 line-through">
+          <h5 className="text-(--color-text-1)/50 line-through">
             {priceFormatter.format(product.previousPrice)}
-          </h3>
+          </h5>
         ) : null}
       </div>
 

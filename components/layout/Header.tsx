@@ -23,7 +23,7 @@ export default function Header() {
         <div className="mx-auto flex max-w-[1240px] items-center justify-between px-4 py-3 md:px-8">
           <p className="text-center text-sm w-full">
             Summer Sale For All Swim Suits And Free Express Delivery - OFF 50%!{" "}
-            <Link href="#" className="font-semibold underline underline-offset-2 ml-2">
+            <Link href="/products" className="font-semibold underline underline-offset-2 ml-2">
               ShopNow
             </Link>
           </p>

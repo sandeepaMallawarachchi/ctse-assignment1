@@ -1,60 +1,55 @@
 "use client";
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import ProductCard, { type Product } from "./ProductCard";
+import ProductCard, { type Product } from "../products/ProductCard";
 
 const products: Product[] = [
   {
     id: 1,
     name: "Breed Dry Dog Food",
-    imageUrl: "/products/p5.webp",
+    imageUrl: "/products/p9.webp",
     currentPrice: 100,
     previousPrice: 0,
     rating: 3,
     reviewCount: 35,
-    showAddToCart: false,
   },
   {
     id: 2,
     name: "CANON EOS DSLR Camera",
-    imageUrl: "/products/p6.webp",
+    imageUrl: "/products/p11.webp",
     currentPrice: 360,
     previousPrice: 0,
     rating: 4,
     reviewCount: 95,
-    showAddToCart: true,
   },
   {
     id: 3,
     name: "ASUS FHD Gaming Laptop",
-    imageUrl: "/products/p7.webp",
+    imageUrl: "/products/p12.webp",
     currentPrice: 700,
     previousPrice: 0,
     rating: 5,
     reviewCount: 325,
-    showAddToCart: false,
   },
   {
     id: 4,
     name: "Curology Product Set",
-    imageUrl: "/products/p8.webp",
+    imageUrl: "/products/p10.webp",
     currentPrice: 500,
     previousPrice: 0,
     rating: 4,
     reviewCount: 145,
-    showAddToCart: false,
   },
   {
     id: 5,
     name: "Kids Electric Car",
-    imageUrl: "/products/p9.webp",
+    imageUrl: "/products/p13.webp",
     currentPrice: 960,
     previousPrice: 0,
     rating: 5,
     reviewCount: 65,
-    showAddToCart: false,
     badgeLabel: "NEW",
     badgeVariant: "success",
     colorOptions: ["#FB1314", "#DB4444"],
@@ -62,23 +57,21 @@ const products: Product[] = [
   {
     id: 6,
     name: "Jr. Zoom Soccer Cleats",
-    imageUrl: "/products/p12.webp",
+    imageUrl: "/products/p14.webp",
     currentPrice: 1160,
     previousPrice: 0,
     rating: 5,
     reviewCount: 35,
-    showAddToCart: false,
     colorOptions: ["#EEFF61", "#DB4444"],
   },
   {
     id: 7,
     name: "GP11 Shooter USB Gamepad",
-    imageUrl: "/products/p11.webp",
+    imageUrl: "/products/p15.webp",
     currentPrice: 660,
     previousPrice: 0,
     rating: 4,
     reviewCount: 55,
-    showAddToCart: false,
     badgeLabel: "NEW",
     badgeVariant: "success",
     colorOptions: ["#000000", "#DB4444"],
@@ -91,7 +84,6 @@ const products: Product[] = [
     previousPrice: 0,
     rating: 4,
     reviewCount: 55,
-    showAddToCart: false,
     colorOptions: ["#184A48", "#DB4444"],
   },
   {
@@ -103,7 +95,6 @@ const products: Product[] = [
     previousPrice: 160,
     rating: 5,
     reviewCount: 88,
-    showAddToCart: false,
   },
   {
     id: 10,
@@ -114,7 +105,6 @@ const products: Product[] = [
     previousPrice: 1160,
     rating: 4,
     reviewCount: 75,
-    showAddToCart: false,
   },
   {
     id: 11,
@@ -125,7 +115,6 @@ const products: Product[] = [
     previousPrice: 400,
     rating: 5,
     reviewCount: 99,
-    showAddToCart: false,
   },
   {
     id: 12,
@@ -136,7 +125,6 @@ const products: Product[] = [
     previousPrice: 400,
     rating: 4,
     reviewCount: 99,
-    showAddToCart: false,
   },
 ];
 
@@ -240,9 +228,12 @@ export default function Products() {
       </div>
 
       <div className="mt-12 flex justify-center">
-        <Button variant="primary" size="lg" className="px-12">
+        <Link
+          href="/products"
+          className="inline-flex h-11 items-center justify-center rounded-md bg-(--color-primary-btn) px-12 text-white transition-colors hover:bg-(--color-primary-btn-hover)"
+        >
           View All Products
-        </Button>
+        </Link>
       </div>
     </section>
   );
