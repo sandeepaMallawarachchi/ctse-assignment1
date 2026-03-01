@@ -137,7 +137,7 @@ export default function FlashSales() {
         <section className="mx-auto max-w-310 px-4 pt-14 pb-16 md:px-8">
             <div className="mb-5 flex items-center gap-3">
                 <div className="h-9 w-4 rounded bg-(--color-primary-btn)" />
-                <h5 className="font-semibold text-(--color-primary-btn)">Today' s</h5>
+                <h5 className="font-semibold text-(--color-primary-btn)">Today&apos;s</h5>
             </div>
 
             <div className="flex flex-wrap items-end justify-between gap-y-5">
