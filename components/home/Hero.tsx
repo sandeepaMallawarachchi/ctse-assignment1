@@ -37,7 +37,7 @@ export default function Hero() {
         ))}
       </div>
 
-      <div className="absolute bottom-12 left-14 z-10">
+      <div className="absolute bottom-12 md:left-14 left-1/2 -translate-x-1/2 md:translate-x-0 text-center md:text-left z-10">
         <Link
           href="#"
           className="inline-flex items-center gap-3 border-b border-white pb-1 text-lg font-medium text-white"

@@ -1,3 +1,5 @@
+"use client";
+
 import { Eye, Heart, Star } from "lucide-react";
 import Image from "next/image";
 
@@ -5,11 +7,12 @@ export type Product = {
   id: number;
   name: string;
   imageUrl: string;
-  discountPercent: number;
+  discountPercent?: number;
   currentPrice: number;
   previousPrice: number;
   rating: number;
   reviewCount: number;
+  showAddToCart?: boolean;
 };
 
 type ProductCardProps = {
@@ -72,12 +75,17 @@ export default function ProductCard({
   onQuickViewClick,
   onAddToCartClick,
 }: ProductCardProps) {
+  const shouldShowDiscount = (product.discountPercent ?? 0) > 0;
+  const shouldShowAddToCart = product.showAddToCart ?? true;
+
   return (
     <article className="w-[250px] shrink-0">
       <div className="group relative h-[230px] overflow-hidden rounded bg-(--color-secondary)">
-        <div className="absolute left-3 top-3 rounded bg-(--color-primary-btn) px-2.5 py-1 text-white">
-          <h6>-{product.discountPercent}%</h6>
-        </div>
+        {shouldShowDiscount ? (
+          <div className="absolute left-3 top-3 rounded bg-(--color-primary-btn) px-2.5 py-1 text-white">
+            <h6>-{product.discountPercent}%</h6>
+          </div>
+        ) : null}
 
         <div className="absolute right-3 top-3 z-10 flex flex-col gap-2">
           <IconButton
@@ -104,22 +112,26 @@ export default function ProductCard({
           />
         </div>
 
-        <button
-          type="button"
-          onClick={() => onAddToCartClick?.(product.id)}
-          className="absolute bottom-0 left-0 w-full translate-y-full bg-(--color-btn-2) py-2 font-medium text-white opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100"
-        >
-          Add To Cart
-        </button>
+        {shouldShowAddToCart ? (
+          <button
+            type="button"
+            onClick={() => onAddToCartClick?.(product.id)}
+            className="absolute bottom-0 left-0 w-full translate-y-full bg-(--color-btn-2) py-2 font-medium text-white opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100"
+          >
+            Add To Cart
+          </button>
+        ) : null}
       </div>
 
       <h3 className="mt-3 leading-tight font-medium text-(--color-text-1)">{product.name}</h3>
 
       <div className="mt-1.5 flex items-center gap-3 font-medium">
         <h3 className="text-(--color-primary-btn)">{priceFormatter.format(product.currentPrice)}</h3>
-        <h3 className="text-(--color-text-1)/50 line-through">
-          {priceFormatter.format(product.previousPrice)}
-        </h3>
+        {product.previousPrice > 0 ? (
+          <h3 className="text-(--color-text-1)/50 line-through">
+            {priceFormatter.format(product.previousPrice)}
+          </h3>
+        ) : null}
       </div>
 
       <Rating rating={product.rating} reviewCount={product.reviewCount} />

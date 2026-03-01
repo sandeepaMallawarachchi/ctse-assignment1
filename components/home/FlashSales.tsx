@@ -148,7 +148,7 @@ export default function FlashSales() {
                     <Countdown data={countdownData} />
                 </div>
 
-                <div className="flex items-center gap-2 md:justify-end justify-center w-full">
+                <div className="flex items-center gap-2 justify-end">
                     <button
                         aria-label="Previous products"
                         onClick={() => handleArrowClick("left")}
