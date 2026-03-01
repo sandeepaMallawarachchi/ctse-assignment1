@@ -11,7 +11,13 @@ export default function Footer() {
       <div className="mx-auto max-w-[1240px] px-4 py-14 md:px-8 md:py-18">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
           <div className="space-y-5 text-center md:text-left">
-            <img src="/logo.webp" alt="Exclusive logo" width={150} className="w-[120px] mx-auto md:mx-0" />
+            <Image
+              src="/logo.webp"
+              alt="Exclusive logo"
+              width={150}
+              height={44}
+              className="mx-auto w-[120px] md:mx-0"
+            />
             <h3 className="font-medium">Subscribe</h3>
             <p className="text-white/95">Get 10% off your first order</p>
 
