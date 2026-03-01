@@ -81,7 +81,7 @@ export default function ProductDetailsView({ product, relatedProducts }: Product
         </div>
 
         <div className="order-3">
-          <h1 className="font-semibold text-(--color-text-1)">{product.name}</h1>
+          <h2 className="font-semibold text-(--color-text-1)">{product.name}</h2>
 
           <div className="mt-4">
             <Rating rating={product.rating} reviewCount={product.reviewCount} />
