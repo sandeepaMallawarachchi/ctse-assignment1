@@ -1,9 +1,9 @@
 "use client";
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import ProductCard, { type Product } from "./ProductCard";
+import ProductCard, { type Product } from "../products/ProductCard";
 
 type CountdownValue = {
     label: string;
@@ -179,9 +179,12 @@ export default function FlashSales() {
             </div>
 
             <div className="mt-12 flex justify-center">
-                <Button variant="primary" size="lg" className="px-10">
+                <Link
+                  href="/products"
+                  className="inline-flex h-11 items-center justify-center rounded-md bg-(--color-primary-btn) px-10 text-white transition-colors hover:bg-(--color-primary-btn-hover)"
+                >
                     View All Products
-                </Button>
+                </Link>
             </div>
         </section>
     );

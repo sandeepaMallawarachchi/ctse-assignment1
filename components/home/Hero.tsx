@@ -39,7 +39,7 @@ export default function Hero() {
 
       <div className="absolute bottom-12 md:left-14 left-1/2 -translate-x-1/2 md:translate-x-0 text-center md:text-left z-10">
         <Link
-          href="#"
+          href="/products"
           className="inline-flex items-center gap-3 border-b border-white pb-1 text-lg font-medium text-white"
         >
           Shop Now

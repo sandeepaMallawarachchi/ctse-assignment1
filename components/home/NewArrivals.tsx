@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 type ArrivalItem = {
   id: number;
@@ -66,7 +65,7 @@ function ArrivalCard({
         <h3 className="font-semibold leading-tight text-white">{title}</h3>
         <p className="mt-2 max-w-[260px] leading-snug text-white/90">{description}</p>
         <Link
-          href="#"
+          href="/products"
           className="mt-3 inline-flex items-center gap-2 border-b border-white pb-0.5 font-medium text-white"
         >
           Shop Now
@@ -77,21 +76,10 @@ function ArrivalCard({
 }
 
 export default function NewArrivals() {
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const left = arrivals.find((item) => item.layout === "left");
   const topRight = arrivals.find((item) => item.layout === "topRight");
   const bottomLeft = arrivals.find((item) => item.layout === "bottomLeft");
   const bottomRight = arrivals.find((item) => item.layout === "bottomRight");
-
-  useEffect(() => {
-    const onScroll = () => {
-      setShowScrollTop(window.scrollY > 240);
-    };
-
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   if (!left || !topRight || !bottomLeft || !bottomRight) {
     return null;

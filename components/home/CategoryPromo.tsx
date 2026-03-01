@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function CategoryPromo() {
   return (
@@ -16,9 +16,12 @@ export default function CategoryPromo() {
         </div>
 
         <div className="absolute bottom-[10%] md:left-[10%] left-1/2 -translate-x-1/2 md:translate-x-0 text-center md:text-left">
-          <Button variant="success" size="lg" className="px-10">
+          <Link
+            href="/products"
+            className="inline-flex h-11 items-center justify-center rounded-md bg-(--color-btn-3) px-10 text-black transition hover:brightness-95"
+          >
             Shop Now
-          </Button>
+          </Link>
         </div>
       </div>
     </section>
