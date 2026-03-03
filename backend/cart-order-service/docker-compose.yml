@@ -7,13 +7,8 @@ services:
     container_name: cart-order-service
     ports:
       - "8082:8082"
-    environment:
-      MONGODB_URI:          mongodb://mongodb:27017/cart_order_db
-      JWT_SECRET:           ${JWT_SECRET}
-      PRODUCT_CATALOG_URL:  ${PRODUCT_CATALOG_URL:-http://product-catalog-service:8081}
-      PAYMENT_SERVICE_URL:  ${PAYMENT_SERVICE_URL:-http://payment-service:8083}
-      AUTH_SERVICE_URL:     ${AUTH_SERVICE_URL:-http://auth-service:8080}
-      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-ctse-internal-secret-2024}
+    env_file:
+      - .env
     depends_on:
       mongodb:
         condition: service_healthy
