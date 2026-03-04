@@ -5,6 +5,7 @@ WORKDIR /app
 # Cache dependencies first (only re-downloads when pom.xml changes)
 COPY mvnw pom.xml ./
 COPY .mvn .mvn
+RUN chmod +x ./mvnw
 RUN ./mvnw dependency:go-offline -B --no-transfer-progress
 
 # Build the application
