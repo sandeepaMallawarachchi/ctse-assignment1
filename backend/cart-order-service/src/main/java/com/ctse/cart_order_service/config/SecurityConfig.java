@@ -46,6 +46,8 @@ public class SecurityConfig {
                 ).permitAll()
                 // Internal callback from Payment Service (secured by X-Service-Key header, not JWT)
                 .requestMatchers(HttpMethod.PUT, "/api/orders/*/payment-callback").permitAll()
+                // Public coupon validation (read-only, no side effects)
+                .requestMatchers(HttpMethod.POST, "/api/coupons/validate").permitAll()
                 // Everything else needs authentication
                 .anyRequest().authenticated()
             )

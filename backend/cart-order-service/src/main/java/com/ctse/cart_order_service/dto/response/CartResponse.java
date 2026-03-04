@@ -14,7 +14,14 @@ public class CartResponse {
     private String cartId;
     private String userId;
     private List<CartItemResponse> items;
+    /** Subtotal before discount. */
     private BigDecimal totalAmount;
+    /** Applied coupon code, or null. */
+    private String appliedCouponCode;
+    /** Discount amount (0 if no coupon). */
+    private BigDecimal discountAmount;
+    /** Final amount after discount (totalAmount - discountAmount). */
+    private BigDecimal finalAmount;
     private int totalItems;
     private LocalDateTime updatedAt;
 

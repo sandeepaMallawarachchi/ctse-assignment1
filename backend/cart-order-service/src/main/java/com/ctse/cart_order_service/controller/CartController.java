@@ -1,6 +1,7 @@
 package com.ctse.cart_order_service.controller;
 
 import com.ctse.cart_order_service.dto.request.AddToCartRequest;
+import com.ctse.cart_order_service.dto.request.ApplyCouponRequest;
 import com.ctse.cart_order_service.dto.request.UpdateCartItemRequest;
 import com.ctse.cart_order_service.dto.response.ApiResponse;
 import com.ctse.cart_order_service.dto.response.CartResponse;
@@ -66,6 +67,22 @@ public class CartController {
     public ResponseEntity<ApiResponse<Void>> clearCart(Authentication auth) {
         cartService.clearCart(principal(auth).getUserId());
         return ResponseEntity.ok(ApiResponse.success("Cart cleared", null));
+    }
+
+    @PostMapping("/coupons")
+    @Operation(summary = "Apply a coupon to the cart")
+    public ResponseEntity<ApiResponse<CartResponse>> applyCoupon(
+            Authentication auth,
+            @Valid @RequestBody ApplyCouponRequest request) {
+        CartResponse cart = cartService.applyCoupon(principal(auth).getUserId(), request.getCode());
+        return ResponseEntity.ok(ApiResponse.success("Coupon applied", cart));
+    }
+
+    @DeleteMapping("/coupons")
+    @Operation(summary = "Remove the applied coupon from the cart")
+    public ResponseEntity<ApiResponse<CartResponse>> removeCoupon(Authentication auth) {
+        CartResponse cart = cartService.removeCoupon(principal(auth).getUserId());
+        return ResponseEntity.ok(ApiResponse.success("Coupon removed", cart));
     }
 
     private UserPrincipal principal(Authentication auth) {
