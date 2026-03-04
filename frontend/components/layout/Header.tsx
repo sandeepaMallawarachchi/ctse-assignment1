@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Heart, Menu, Search, ShoppingCart, X } from "lucide-react";
 import { useState } from "react";
+import { useAppSelector } from "@/store/hooks";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -16,6 +17,7 @@ const navLinks = [
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const totalItems = useAppSelector((state) => state.cart.totalItems);
 
   return (
     <header className="border-b border-black/10 bg-[var(--color-primary)]">
@@ -72,9 +74,14 @@ export default function Header() {
             <button type="button" aria-label="Wishlist" className="text-[var(--color-text-1)]">
               <Heart size={24} strokeWidth={1.8} />
             </button>
-            <button type="button" aria-label="Cart" className="text-[var(--color-text-1)]">
+            <Link href="/cart" aria-label="Cart" className="relative text-[var(--color-text-1)]">
               <ShoppingCart size={24} strokeWidth={1.8} />
-            </button>
+              {totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary-btn)] text-[10px] font-bold text-white">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
           </div>
 
           <button
@@ -121,13 +128,18 @@ export default function Header() {
             >
               <Heart size={20} strokeWidth={1.8} />
             </button>
-            <button
-              type="button"
+            <Link
+              href="/cart"
               aria-label="Cart"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-secondary)] text-[var(--color-text-1)]"
+              className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-secondary)] text-[var(--color-text-1)]"
             >
               <ShoppingCart size={20} strokeWidth={1.8} />
-            </button>
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--color-primary-btn)] text-[9px] font-bold text-white">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
           </div>
         </div>
       </div>

@@ -3,6 +3,8 @@
 import { Eye, Heart, Star } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/store/hooks";
+import { addCartItem } from "@/store/cartSlice";
 
 export type Product = {
   id: number;
@@ -91,6 +93,7 @@ export default function ProductCard({
   onAddToCartClick,
 }: ProductCardProps) {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const shouldShowDiscount = (product.discountPercent ?? 0) > 0;
   const badgeLabel = product.badgeLabel ?? (shouldShowDiscount ? `-${product.discountPercent}%` : null);
   const badgeClassName =
@@ -156,6 +159,14 @@ export default function ProductCard({
           type="button"
           onClick={(event) => {
             event.stopPropagation();
+            dispatch(
+              addCartItem({
+                productId: String(product.id),
+                productName: product.name,
+                price: product.currentPrice,
+                imageUrl: product.imageUrl,
+              })
+            );
             onAddToCartClick?.(product.id);
           }}
           className="absolute bottom-0 left-0 w-full translate-y-full bg-(--color-btn-2) py-2 font-medium text-white opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100"
