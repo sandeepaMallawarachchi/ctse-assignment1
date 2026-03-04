@@ -12,35 +12,50 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
-@Document(collection = "carts")
+@Document(collection = "coupons")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Cart {
+public class Coupon {
 
     @Id
     private String id;
 
     @Indexed(unique = true)
-    private String userId;
+    private String code;
+
+    /** PERCENTAGE → value is 0-100 (e.g. 10 = 10 %).
+     *  FIXED_AMOUNT → value is absolute dollar amount to subtract. */
+    private CouponType type;
+
+    private BigDecimal value;
+
+    /** Minimum cart subtotal required to apply this coupon. */
+    @Builder.Default
+    private BigDecimal minOrderAmount = BigDecimal.ZERO;
+
+    /** 0 = unlimited. */
+    @Builder.Default
+    private int maxUsageCount = 0;
 
     @Builder.Default
-    private List<CartItem> items = new ArrayList<>();
+    private int usageCount = 0;
 
-    /** Code of the currently applied coupon, or null if none. */
-    private String appliedCouponCode;
-
-    /** Pre-calculated discount amount for the applied coupon. */
     @Builder.Default
-    private BigDecimal discountAmount = BigDecimal.ZERO;
+    private boolean active = true;
+
+    /** null = never expires. */
+    private LocalDateTime expiresAt;
 
     @CreatedDate
     private LocalDateTime createdAt;
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    public enum CouponType {
+        PERCENTAGE, FIXED_AMOUNT
+    }
 }

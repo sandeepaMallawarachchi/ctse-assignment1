@@ -4,6 +4,7 @@ import Breadcrumb from "@/components/layout/Breadcrumb";
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
 import ScrollToTop from "@/components/layout/ScrollToTop";
+import StoreProvider from "@/store/StoreProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,15 +30,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Header />
-        <Breadcrumb
-          labelsMap={{
-            products: "All Products",
-          }}
-        />
-        <main>{children}</main>
-        <Footer />
-        <ScrollToTop />
+        <StoreProvider>
+          <Header />
+          <Breadcrumb
+            labelsMap={{
+              products: "All Products",
+              cart: "Cart",
+              checkout: "CheckOut",
+            }}
+          />
+          <main>{children}</main>
+          <Footer />
+          <ScrollToTop />
+        </StoreProvider>
       </body>
     </html>
   );

@@ -25,6 +25,7 @@ public class CartService {
 
     private final CartRepository cartRepository;
     private final ProductServiceClient productServiceClient;
+    private final CouponService couponService;
 
     public CartResponse getCart(String userId) {
         Cart cart = getOrCreateCart(userId);
@@ -64,6 +65,7 @@ public class CartService {
                     .build());
         }
 
+        recalculateDiscount(cart);
         return mapToResponse(cartRepository.save(cart));
     }
 
@@ -82,6 +84,7 @@ public class CartService {
             item.setQuantity(request.getQuantity());
         }
 
+        recalculateDiscount(cart);
         return mapToResponse(cartRepository.save(cart));
     }
 
@@ -94,6 +97,7 @@ public class CartService {
             throw new ResourceNotFoundException("Product not found in cart: " + productId);
         }
 
+        recalculateDiscount(cart);
         return mapToResponse(cartRepository.save(cart));
     }
 
@@ -101,11 +105,32 @@ public class CartService {
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found for user: " + userId));
         cart.getItems().clear();
+        cart.setAppliedCouponCode(null);
+        cart.setDiscountAmount(BigDecimal.ZERO);
         cartRepository.save(cart);
         log.debug("Cart cleared for user: {}", userId);
     }
 
-    // ── helpers ──────────────────────────────────────────────────────────────
+    // ── Coupon operations ─────────────────────────────────────────────────────
+
+    public CartResponse applyCoupon(String userId, String code) {
+        Cart cart = getOrCreateCart(userId);
+        BigDecimal subtotal = computeSubtotal(cart);
+        BigDecimal discount = couponService.calculateDiscount(code, subtotal);
+        cart.setAppliedCouponCode(code.toUpperCase());
+        cart.setDiscountAmount(discount);
+        return mapToResponse(cartRepository.save(cart));
+    }
+
+    public CartResponse removeCoupon(String userId) {
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found for user: " + userId));
+        cart.setAppliedCouponCode(null);
+        cart.setDiscountAmount(BigDecimal.ZERO);
+        return mapToResponse(cartRepository.save(cart));
+    }
+
+    // ── helpers ───────────────────────────────────────────────────────────────
 
     private Cart getOrCreateCart(String userId) {
         return cartRepository.findByUserId(userId).orElseGet(() -> {
@@ -115,6 +140,26 @@ public class CartService {
                     .build();
             return cartRepository.save(newCart);
         });
+    }
+
+    private BigDecimal computeSubtotal(Cart cart) {
+        return cart.getItems().stream()
+                .map(i -> i.getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private void recalculateDiscount(Cart cart) {
+        if (cart.getAppliedCouponCode() == null) return;
+        try {
+            BigDecimal discount = couponService.calculateDiscount(
+                    cart.getAppliedCouponCode(), computeSubtotal(cart));
+            cart.setDiscountAmount(discount);
+        } catch (Exception ex) {
+            log.debug("Coupon '{}' invalidated after cart change: {}",
+                    cart.getAppliedCouponCode(), ex.getMessage());
+            cart.setAppliedCouponCode(null);
+            cart.setDiscountAmount(BigDecimal.ZERO);
+        }
     }
 
     private CartResponse mapToResponse(Cart cart) {
@@ -130,9 +175,12 @@ public class CartService {
                         .build())
                 .toList();
 
-        BigDecimal total = itemResponses.stream()
+        BigDecimal subtotal = itemResponses.stream()
                 .map(CartResponse.CartItemResponse::getItemTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal discount = cart.getDiscountAmount() != null
+                ? cart.getDiscountAmount() : BigDecimal.ZERO;
 
         int totalItems = cart.getItems().stream()
                 .mapToInt(CartItem::getQuantity)
@@ -142,7 +190,10 @@ public class CartService {
                 .cartId(cart.getId())
                 .userId(cart.getUserId())
                 .items(itemResponses)
-                .totalAmount(total)
+                .totalAmount(subtotal)
+                .appliedCouponCode(cart.getAppliedCouponCode())
+                .discountAmount(discount)
+                .finalAmount(subtotal.subtract(discount))
                 .totalItems(totalItems)
                 .updatedAt(cart.getUpdatedAt())
                 .build();
