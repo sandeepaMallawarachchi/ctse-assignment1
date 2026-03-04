@@ -35,6 +35,10 @@ jobs:
           distribution: temurin
           cache: maven
 
+      - name: Make Maven Wrapper executable
+        run: chmod +x ./mvnw
+        working-directory: ${{ env.SERVICE_DIR }}
+
       - name: Build and run tests
         run: ./mvnw clean verify -B --no-transfer-progress
         working-directory: ${{ env.SERVICE_DIR }}
