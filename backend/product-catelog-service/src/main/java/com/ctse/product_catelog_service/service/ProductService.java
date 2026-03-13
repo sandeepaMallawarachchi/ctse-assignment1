@@ -15,11 +15,11 @@ public interface ProductService {
 
     ProductResponse getProductById(String productId);
 
+    ProductResponse getProductBySlug(String slug);
+
     List<ProductResponse> getAllProducts();
 
     List<ProductResponse> getProductsByCategory(String category);
-
-    List<ProductResponse> searchProductsByName(String name);
 
     ProductResponse updateStock(String productId, Integer stockQuantity);
 }

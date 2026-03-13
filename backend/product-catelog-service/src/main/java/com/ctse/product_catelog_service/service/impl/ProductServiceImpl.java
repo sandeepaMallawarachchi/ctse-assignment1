@@ -31,7 +31,6 @@ public class ProductServiceImpl implements ProductService {
                 .imageUrl(request.getImageUrl())
                 .rating(request.getRating() == null ? 0.0 : request.getRating())
                 .reviewCount(request.getReviewCount() == null ? 0 : request.getReviewCount())
-                .breadcrumbs(normalizeList(request.getBreadcrumbs()))
                 .gallery(normalizeList(request.getGallery()))
                 .colorOptions(normalizeList(request.getColorOptions()))
                 .sizes(normalizeList(request.getSizes()))
@@ -54,7 +53,6 @@ public class ProductServiceImpl implements ProductService {
         existing.setImageUrl(request.getImageUrl() == null ? existing.getImageUrl() : request.getImageUrl());
         existing.setRating(request.getRating() == null ? existing.getRating() : request.getRating());
         existing.setReviewCount(request.getReviewCount() == null ? existing.getReviewCount() : request.getReviewCount());
-        existing.setBreadcrumbs(normalizeList(request.getBreadcrumbs()));
         existing.setGallery(normalizeList(request.getGallery()));
         existing.setColorOptions(normalizeList(request.getColorOptions()));
         existing.setSizes(normalizeList(request.getSizes()));
@@ -76,6 +74,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public ProductResponse getProductBySlug(String slug) {
+        Product product = productRepository.findBySlugAndActiveTrue(slug.trim())
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found for slug: " + slug));
+        return toResponse(product);
+    }
+
+    @Override
     public List<ProductResponse> getAllProducts() {
         return productRepository.findAll()
                 .stream()
@@ -87,14 +92,6 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<ProductResponse> getProductsByCategory(String category) {
         return productRepository.findByCategoryIgnoreCaseAndActiveTrue(category.trim())
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    @Override
-    public List<ProductResponse> searchProductsByName(String name) {
-        return productRepository.findByNameContainingIgnoreCaseAndActiveTrue(name.trim())
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -135,7 +132,6 @@ public class ProductServiceImpl implements ProductService {
                 .imageUrl(product.getImageUrl())
                 .rating(product.getRating())
                 .reviewCount(product.getReviewCount())
-                .breadcrumbs(normalizeList(product.getBreadcrumbs()))
                 .gallery(normalizeList(product.getGallery()))
                 .colorOptions(normalizeList(product.getColorOptions()))
                 .sizes(normalizeList(product.getSizes()))
