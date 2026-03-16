@@ -1,5 +1,6 @@
-package com.ctse.product_catelog_service.security;
+package com.example.auth_service.security;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +19,11 @@ public class JwtProperties {
     @NotBlank
     private String issuer;
 
+    @Min(1)
+    private long expirationMinutes;
+
     @NotBlank
     private String cookieName;
+
+    private boolean cookieSecure;
 }

@@ -22,7 +22,7 @@ import java.time.Instant;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/products")
+@RequestMapping("/api/products")
 @RequiredArgsConstructor
 @Tag(name = "Products", description = "Product Catalog Service APIs")
 public class ProductController {

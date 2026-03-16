@@ -1,4 +1,4 @@
-package com.ctse.product_catelog_service.config;
+package com.example.auth_service.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -16,19 +16,18 @@ import java.util.List;
 public class OpenApiConfig {
 
     @Bean
-    public OpenAPI catalogOpenApi() {
+    public OpenAPI authOpenApi() {
         String securitySchemeName = "bearerAuth";
-
         return new OpenAPI()
                 .info(new Info()
-                        .title("Product Catalog Service API")
+                        .title("Auth Service API")
                         .version("v1")
-                        .description("REST API for product management in e-commerce platform")
+                        .description("Authentication, registration, JWT, and Google OAuth APIs")
                         .contact(new Contact().name("CTSE Team")))
                 .servers(List.of(new Server().url("/")))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
-                .components(new Components().addSecuritySchemes(securitySchemeName,
-                        new SecurityScheme()
+                .components(new Components()
+                        .addSecuritySchemes(securitySchemeName, new SecurityScheme()
                                 .name(securitySchemeName)
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
