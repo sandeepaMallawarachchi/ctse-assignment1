@@ -17,4 +17,7 @@ public class JwtProperties {
 
     @NotBlank
     private String issuer;
+
+    @NotBlank
+    private String cookieName;
 }

@@ -30,12 +30,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String token = extractToken(request);
-        if (token != null && jwtService.isValid(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (token != null && jwtService.isValid(token) && shouldAuthenticateWithJwt()) {
             Claims claims = jwtService.parseToken(token);
             userService.findByEmail(claims.getSubject()).ifPresent(user -> authenticate(request, user));
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean shouldAuthenticateWithJwt() {
+        return SecurityContextHolder.getContext().getAuthentication() == null
+                || !(SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof AuthUserPrincipal);
     }
 
     private void authenticate(HttpServletRequest request, User user) {

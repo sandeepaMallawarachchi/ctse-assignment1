@@ -5,6 +5,7 @@ import com.example.auth_service.dto.AuthResponse;
 import com.example.auth_service.dto.LoginRequest;
 import com.example.auth_service.dto.RegisterRequest;
 import com.example.auth_service.dto.UserResponse;
+import com.example.auth_service.exception.UnauthorizedException;
 import com.example.auth_service.security.AuthUserPrincipal;
 import com.example.auth_service.security.JwtCookieService;
 import com.example.auth_service.service.AuthService;
@@ -16,7 +17,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -60,17 +63,17 @@ public class AuthController {
 
     @GetMapping("/me")
     @Operation(summary = "Get current authenticated user")
-    public ResponseEntity<ApiResponse<UserResponse>> me(@AuthenticationPrincipal AuthUserPrincipal principal,
+    public ResponseEntity<ApiResponse<UserResponse>> me(Authentication authentication,
                                                         HttpServletRequest httpRequest) {
-        UserResponse user = authService.getCurrentUser(principal.getUsername());
+        UserResponse user = authService.getCurrentUser(resolveAuthenticatedEmail(authentication));
         return ResponseEntity.ok(body(HttpStatus.OK, "Current user fetched successfully", httpRequest.getRequestURI(), user));
     }
 
     @GetMapping("/token")
     @Operation(summary = "Get JWT token for the current authenticated user")
-    public ResponseEntity<ApiResponse<AuthResponse>> token(@AuthenticationPrincipal AuthUserPrincipal principal,
+    public ResponseEntity<ApiResponse<AuthResponse>> token(Authentication authentication,
                                                            HttpServletRequest httpRequest) {
-        AuthResponse authResponse = authService.issueTokenForUser(principal.getUsername());
+        AuthResponse authResponse = authService.issueTokenForUser(resolveAuthenticatedEmail(authentication));
         return withCookie(HttpStatus.OK, "Token issued successfully", httpRequest.getRequestURI(), authResponse);
     }
 
@@ -99,5 +102,32 @@ public class AuthController {
                 .path(path)
                 .data(data)
                 .build();
+    }
+
+    private String resolveAuthenticatedEmail(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedException("Unauthorized");
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof AuthUserPrincipal authUserPrincipal) {
+            return authUserPrincipal.getUsername();
+        }
+        if (principal instanceof OAuth2User oauth2User) {
+            String email = oauth2User.getAttribute("email");
+            if (email != null && !email.isBlank()) {
+                return email;
+            }
+        }
+        if (principal instanceof UserDetails userDetails) {
+            return userDetails.getUsername();
+        }
+
+        String name = authentication.getName();
+        if (name != null && name.contains("@")) {
+            return name;
+        }
+
+        throw new UnauthorizedException("Authenticated user email could not be resolved");
     }
 }
