@@ -49,7 +49,6 @@ public class ProductUpdateRequest {
     @Min(value = 0, message = "Review count cannot be negative")
     private Integer reviewCount;
 
-    private List<String> breadcrumbs;
     private List<String> gallery;
     private List<String> colorOptions;
     private List<String> sizes;

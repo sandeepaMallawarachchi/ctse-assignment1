@@ -59,9 +59,6 @@ public class Product {
     private Integer reviewCount = 0;
 
     @Builder.Default
-    private List<String> breadcrumbs = new ArrayList<>();
-
-    @Builder.Default
     private List<String> gallery = new ArrayList<>();
 
     @Builder.Default

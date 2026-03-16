@@ -21,7 +21,6 @@ public class ProductResponse {
     private String imageUrl;
     private Double rating;
     private Integer reviewCount;
-    private List<String> breadcrumbs;
     private List<String> gallery;
     private List<String> colorOptions;
     private List<String> sizes;

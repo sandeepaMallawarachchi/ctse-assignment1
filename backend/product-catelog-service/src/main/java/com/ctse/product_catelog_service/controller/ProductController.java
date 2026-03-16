@@ -72,6 +72,16 @@ public class ProductController {
         return ResponseEntity.ok(response(HttpStatus.OK, "Product fetched successfully", httpRequest.getRequestURI(), product));
     }
 
+    @GetMapping("/slug/{slug}")
+    @Operation(summary = "Get product by slug")
+    public ResponseEntity<ApiResponse<ProductResponse>> getProductBySlug(
+            @PathVariable String slug,
+            HttpServletRequest httpRequest) {
+
+        ProductResponse product = productService.getProductBySlug(slug);
+        return ResponseEntity.ok(response(HttpStatus.OK, "Product fetched successfully", httpRequest.getRequestURI(), product));
+    }
+
     @GetMapping
     @Operation(summary = "Get all products")
     public ResponseEntity<ApiResponse<List<ProductResponse>>> getAllProducts(HttpServletRequest httpRequest) {
@@ -86,16 +96,6 @@ public class ProductController {
             HttpServletRequest httpRequest) {
 
         List<ProductResponse> products = productService.getProductsByCategory(category);
-        return ResponseEntity.ok(response(HttpStatus.OK, "Products fetched successfully", httpRequest.getRequestURI(), products));
-    }
-
-    @GetMapping("/search")
-    @Operation(summary = "Search products by name")
-    public ResponseEntity<ApiResponse<List<ProductResponse>>> searchProductsByName(
-            @RequestParam String name,
-            HttpServletRequest httpRequest) {
-
-        List<ProductResponse> products = productService.searchProductsByName(name);
         return ResponseEntity.ok(response(HttpStatus.OK, "Products fetched successfully", httpRequest.getRequestURI(), products));
     }
 
