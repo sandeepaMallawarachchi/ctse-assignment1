@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+
+  cart-order-service:
+    build: .
+    container_name: cart-order-service
+    ports:
+      - "8082:8082"
+    env_file:
+      - .env
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - microservices-net
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7.0
+    container_name: cart-order-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: cart_order_db
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - microservices-net
+
+networks:
+  microservices-net:
+    name: microservices-net
+    driver: bridge
+
+volumes:
+  mongodb_data:

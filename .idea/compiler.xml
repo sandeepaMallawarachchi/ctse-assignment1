@@ -2,19 +2,22 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
-      <profile name="Annotation profile for product-catelog-service" enabled="true">
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Annotation profile for auth-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
         </processorPath>
+        <module name="auth-service" />
         <module name="product-catelog-service" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="auth-service" options="-parameters" />
       <module name="product-catelog-service" options="-parameters" />
     </option>
   </component>
