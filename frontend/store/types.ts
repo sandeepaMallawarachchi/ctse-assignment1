@@ -24,7 +24,15 @@ export interface CartState {
   error: string | null;
 }
 
+export interface AuthUser {
+  userId: string;
+  email: string;
+  fullName: string;
+  roles: string[];
+}
+
 export interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
+  user: AuthUser | null;
 }
