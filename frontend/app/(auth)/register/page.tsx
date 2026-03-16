@@ -53,21 +53,22 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12">
-      <div className="flex w-full max-w-[900px] overflow-hidden rounded-lg shadow-sm ">
+    <div className="flex min-h-screen items-center justify-center py-auto ">
+      <div className="flex w-full max-w-screen overflow-hidden rounded-lg px-20">
         {/* Left illustration panel */}
-        <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12"
+        <div className="hidden lg:flex lg:w-1/2 min-h-[68vh] items-center justify-center p-12"
          style={{ 
           backgroundImage: 'url(/signin.png)',
-          backgroundSize: 'cover',
+          backgroundSize: 'contain',
           backgroundPosition: 'center', 
+          backgroundRepeat: 'no-repeat',
         }}
          >
         
         </div>
 
         {/* Right form panel */}
-        <div className="w-full lg:w-1/2 bg-white px-8 py-12 flex flex-col justify-center">
+        <div className="w-full lg:w-1/3 bg-white px-4 py-12 flex flex-col justify-center">
           <h2 className="mb-2 text-[var(--color-text-1)]">Create an account</h2>
           <p className="mb-8 text-sm text-[var(--color-text-2)]">
             Enter your details below
