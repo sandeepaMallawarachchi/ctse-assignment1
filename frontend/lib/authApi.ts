@@ -1,5 +1,10 @@
-const AUTH_SERVICE_URL =
-  process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || "http://localhost:8082";
+const API_GATEWAY_URL = (
+  process.env.NEXT_PUBLIC_API_GATEWAY_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "http://localhost:8080"
+).replace(/\/$/, "");
+
+const AUTH_SERVICE_URL = `${API_GATEWAY_URL}/api/auth`;
 
 export interface AuthResponse {
   accessToken: string;
@@ -19,7 +24,8 @@ interface ApiResponse<T> {
 }
 
 export interface RegisterRequest {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
 }
@@ -29,30 +35,68 @@ export interface LoginRequest {
   password: string;
 }
 
-async function handleResponse<T>(res: Response): Promise<T> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface BackendUserResponse {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  roles: string[];
+}
+
+interface BackendAuthResponse {
+  token: string;
+  tokenType: string;
+  user: BackendUserResponse;
+}
+
+function mapAuthResponse(data: BackendAuthResponse): AuthResponse {
+  const fullName = [data.user.firstName, data.user.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  return {
+    accessToken: data.token,
+    tokenType: data.tokenType,
+    userId: data.user.id,
+    email: data.user.email,
+    fullName,
+    roles: data.user.roles ?? [],
+  };
+}
+
+async function handleResponse<T>(res: Response): Promise<ApiResponse<T>> {
   const body: ApiResponse<T> = await res.json();
   if (!res.ok) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    throw new Error((body as any).message || "Request failed");
+    const details =
+      body.data &&
+      typeof body.data === "object" &&
+      !Array.isArray(body.data)
+        ? Object.values(body.data as Record<string, string>).join(" ")
+        : "";
+    throw new Error([body.message, details].filter(Boolean).join(": ") || "Request failed");
   }
-  return body.data;
+  return body;
 }
 
 export async function apiRegister(req: RegisterRequest): Promise<AuthResponse> {
-  const res = await fetch(`${AUTH_SERVICE_URL}/api/auth/register`, {
+  const res = await fetch(`${AUTH_SERVICE_URL}/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(req),
   });
-  return handleResponse<AuthResponse>(res);
+  const body = await handleResponse<BackendAuthResponse>(res);
+  return mapAuthResponse(body.data);
 }
 
 export async function apiLogin(req: LoginRequest): Promise<AuthResponse> {
-  const res = await fetch(`${AUTH_SERVICE_URL}/api/auth/login`, {
+  const res = await fetch(`${AUTH_SERVICE_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(req),
   });
-  return handleResponse<AuthResponse>(res);
+  const body = await handleResponse<BackendAuthResponse>(res);
+  return mapAuthResponse(body.data);
 }
