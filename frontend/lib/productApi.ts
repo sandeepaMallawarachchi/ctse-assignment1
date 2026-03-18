@@ -100,6 +100,7 @@ interface BackendCategoryResponse {
   id: string;
   name: string;
   slug: string;
+  iconKey?: string | null;
   subCategories: BackendSubCategoryResponse[];
 }
 
@@ -112,6 +113,7 @@ export interface CatalogCategory {
   id: string;
   name: string;
   slug: string;
+  iconKey: string;
   subCategories: CatalogSubCategory[];
 }
 
@@ -175,6 +177,7 @@ function mapCategory(category: BackendCategoryResponse): CatalogCategory {
     id: category.id,
     name: category.name,
     slug: category.slug,
+    iconKey: category.iconKey ?? "grid-2x2",
     subCategories: (category.subCategories ?? []).map((subCategory) => ({
       name: subCategory.name,
       slug: subCategory.slug,
@@ -237,12 +240,16 @@ export async function apiGetCategories(): Promise<CatalogCategory[]> {
   return (body.data ?? []).map(mapCategory);
 }
 
-export async function apiCreateCategory(token: string, name: string): Promise<CatalogCategory> {
+export async function apiCreateCategory(
+  token: string,
+  name: string,
+  iconKey: string
+): Promise<CatalogCategory> {
   const res = await fetch(`${API_GATEWAY_URL}/api/categories`, {
     method: "POST",
     headers: jsonHeaders(token),
     credentials: "include",
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, iconKey }),
   });
   const body = await handleResponse<BackendCategoryResponse>(res);
   return mapCategory(body.data);

@@ -3,6 +3,7 @@
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { getCategoryIcon } from "@/lib/categoryIcons";
 import { apiGetCategories, type CatalogCategory } from "@/lib/productApi";
 
 type CategoriesProps = {
@@ -78,7 +79,13 @@ export default function Categories({
                   aria-expanded={hasChildren ? isOpen : undefined}
                   aria-label={hasChildren ? `Toggle ${category.name} sub categories` : category.name}
                 >
-                  <span className="text-xl">{category.name}</span>
+                  <span className="flex items-center gap-3 text-xl">
+                    {(() => {
+                      const Icon = getCategoryIcon(category.iconKey);
+                      return <Icon size={18} />;
+                    })()}
+                    {category.name}
+                  </span>
                   {hasChildren ? (
                     <ChevronRight size={18} className={`transition ${isOpen ? "rotate-90" : ""}`} />
                   ) : null}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/toast";
+import { categoryIconOptions, getCategoryIcon } from "@/lib/categoryIcons";
 import { useAppSelector } from "@/store/hooks";
 import {
   apiCreateCategory,
@@ -17,6 +18,7 @@ export default function AdminCategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [selectedIconKey, setSelectedIconKey] = useState("grid-2x2");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [newSubCategoryName, setNewSubCategoryName] = useState("");
 
@@ -53,9 +55,10 @@ export default function AdminCategoriesPage() {
     if (!token || !newCategoryName.trim()) return;
 
     try {
-      const created = await apiCreateCategory(token, newCategoryName.trim());
+      const created = await apiCreateCategory(token, newCategoryName.trim(), selectedIconKey);
       setCategories((current) => [...current, created].sort((left, right) => left.name.localeCompare(right.name)));
       setNewCategoryName("");
+      setSelectedIconKey("grid-2x2");
       setSelectedCategoryId(created.id);
       showToast({
         title: "Category created",
@@ -126,6 +129,26 @@ export default function AdminCategoriesPage() {
               Add Category
             </button>
           </div>
+          <div className="mt-4 grid gap-3 grid-cols-3 sm:grid-cols-4">
+            {categoryIconOptions.map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => {
+                  setSelectedIconKey(key);
+                  setNewCategoryName(label);
+                }}
+                className={`flex flex-col items-center justify-center gap-2 rounded-lg border px-3 py-3 text-sm transition ${
+                  selectedIconKey === key
+                    ? "border-[var(--color-primary-btn)] bg-[var(--color-primary-btn)] text-white"
+                    : "border-black/10 bg-white text-[var(--color-text-1)] hover:bg-[var(--color-secondary)]"
+                }`}
+              >
+                <Icon size={22} />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="rounded-lg border border-black/10 bg-white p-4 md:p-6">
@@ -190,6 +213,12 @@ export default function AdminCategoriesPage() {
                   <div>
                     <p className="font-medium text-[var(--color-text-1)]">{category.name}</p>
                     <p className="mt-1 text-sm text-[var(--color-text-2)]">/{category.slug}</p>
+                  </div>
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--color-secondary)] text-[var(--color-text-1)]">
+                    {(() => {
+                      const Icon = getCategoryIcon(category.iconKey);
+                      return <Icon size={20} />;
+                    })()}
                   </div>
                   <span className="inline-flex rounded-lg bg-[var(--color-secondary)] px-3 py-1 text-xs font-medium text-[var(--color-text-2)]">
                     {category.subCategories.length} subcategories

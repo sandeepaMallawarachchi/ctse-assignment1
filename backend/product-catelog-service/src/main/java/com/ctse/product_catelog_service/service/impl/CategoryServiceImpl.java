@@ -42,6 +42,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = Category.builder()
                 .name(normalizedName)
                 .slug(slug)
+                .iconKey(request.getIconKey().trim())
                 .build();
 
         return toResponse(categoryRepository.save(category));
@@ -75,6 +76,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .id(category.getId())
                 .name(category.getName())
                 .slug(category.getSlug())
+                .iconKey(category.getIconKey())
                 .subCategories(category.getSubCategories().stream()
                         .map(subCategory -> SubCategoryResponse.builder()
                                 .name(subCategory.getName())

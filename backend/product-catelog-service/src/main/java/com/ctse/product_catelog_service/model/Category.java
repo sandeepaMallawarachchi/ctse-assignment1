@@ -32,6 +32,8 @@ public class Category {
     @Indexed
     private String name;
 
+    private String iconKey;
+
     @Builder.Default
     private List<SubCategory> subCategories = new ArrayList<>();
 

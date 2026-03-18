@@ -12,6 +12,7 @@ public class CategoryResponse {
     private String id;
     private String name;
     private String slug;
+    private String iconKey;
     private List<SubCategoryResponse> subCategories;
     private Instant createdAt;
     private Instant updatedAt;

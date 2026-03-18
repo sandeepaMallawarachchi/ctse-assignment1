@@ -3,21 +3,11 @@
 import {
   ArrowLeft,
   ArrowRight,
-  Camera,
-  Gamepad2,
-  Grid2x2,
-  Headphones,
-  HeartPulse,
-  House,
-  Monitor,
-  Shirt,
-  Smartphone,
-  Sparkles,
-  Watch,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { apiGetCategories, type CatalogCategory } from "@/lib/productApi";
+import { getCategoryIcon } from "@/lib/categoryIcons";
+import { apiGetCategories } from "@/lib/productApi";
 
 type CategoryItem = {
   id: string;
@@ -31,22 +21,6 @@ const carouselConfig = {
   itemWidth: 180,
   itemGap: 20,
 } as const;
-
-function iconForCategory(category: CatalogCategory) {
-  const key = `${category.slug} ${category.name}`.toLowerCase();
-
-  if (key.includes("phone")) return Smartphone;
-  if (key.includes("computer") || key.includes("laptop")) return Monitor;
-  if (key.includes("watch")) return Watch;
-  if (key.includes("camera")) return Camera;
-  if (key.includes("head") || key.includes("audio")) return Headphones;
-  if (key.includes("game")) return Gamepad2;
-  if (key.includes("fashion") || key.includes("shirt")) return Shirt;
-  if (key.includes("home")) return House;
-  if (key.includes("beauty") || key.includes("health")) return Sparkles;
-  if (key.includes("medicine")) return HeartPulse;
-  return Grid2x2;
-}
 
 function CategoryCard({
   category,
@@ -116,7 +90,7 @@ export default function BrowseByCategory() {
             id: category.id,
             label: category.name,
             categoryName: category.name,
-            icon: iconForCategory(category),
+            icon: getCategoryIcon(category.iconKey),
             highlighted: index === 1,
           }))
         );
