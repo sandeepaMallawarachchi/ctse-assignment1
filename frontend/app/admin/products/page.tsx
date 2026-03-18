@@ -574,7 +574,7 @@ export default function AdminProductsPage() {
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <label className="space-y-2">
-                <span className="text-sm font-medium text-[var(--color-text-1)]">Product Name</span>
+                <span className="text-sm font-medium text-[var(--color-text-1)]">Product Name *</span>
                 <input
                   type="text"
                   value={form.name}
@@ -590,7 +590,7 @@ export default function AdminProductsPage() {
                 />
               </label>
               <label className="space-y-2">
-                <span className="text-sm font-medium text-[var(--color-text-1)]">Slug</span>
+                <span className="text-sm font-medium text-[var(--color-text-1)]">Slug *</span>
                 <input
                   type="text"
                   value={form.slug}
@@ -600,7 +600,7 @@ export default function AdminProductsPage() {
                 />
               </label>
               <label className="space-y-2">
-                <span className="text-sm font-medium text-[var(--color-text-1)]">Category</span>
+                <span className="text-sm font-medium text-[var(--color-text-1)]">Category *</span>
                 <input
                   type="text"
                   value={form.category}
@@ -610,7 +610,7 @@ export default function AdminProductsPage() {
                 />
               </label>
               <label className="space-y-2">
-                <span className="text-sm font-medium text-[var(--color-text-1)]">Price</span>
+                <span className="text-sm font-medium text-[var(--color-text-1)]">Price *</span>
                 <input
                   type="number"
                   min="0.01"
@@ -622,7 +622,7 @@ export default function AdminProductsPage() {
                 />
               </label>
               <label className="space-y-2">
-                <span className="text-sm font-medium text-[var(--color-text-1)]">Stock Quantity</span>
+                <span className="text-sm font-medium text-[var(--color-text-1)]">Stock Quantity *</span>
                 <input
                   type="number"
                   min="0"
@@ -661,7 +661,7 @@ export default function AdminProductsPage() {
             </div>
 
             <label className="mt-4 block space-y-2">
-              <span className="text-sm font-medium text-[var(--color-text-1)]">Description</span>
+              <span className="text-sm font-medium text-[var(--color-text-1)]">Description *</span>
               <textarea
                 value={form.description}
                 onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
@@ -693,7 +693,7 @@ export default function AdminProductsPage() {
                   )}
                 </div>
                 <label className="space-y-2">
-                  <span className="text-sm font-medium text-[var(--color-text-1)]">Primary Product Image</span>
+                  <span className="text-sm font-medium text-[var(--color-text-1)]">Primary Product Image *</span>
                   <input
                     type="file"
                     accept="image/*"
