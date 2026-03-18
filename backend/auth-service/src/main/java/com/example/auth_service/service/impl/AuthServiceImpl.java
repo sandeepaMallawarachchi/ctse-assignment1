@@ -1,9 +1,13 @@
 package com.example.auth_service.service.impl;
 
+import com.example.auth_service.dto.AddressResponse;
 import com.example.auth_service.dto.AuthResponse;
 import com.example.auth_service.dto.LoginRequest;
 import com.example.auth_service.dto.RegisterRequest;
+import com.example.auth_service.dto.UpdateAddressRequest;
+import com.example.auth_service.dto.UpdateProfileRequest;
 import com.example.auth_service.dto.UserResponse;
+import com.example.auth_service.model.Address;
 import com.example.auth_service.exception.BadRequestException;
 import com.example.auth_service.exception.ResourceNotFoundException;
 import com.example.auth_service.exception.UnauthorizedException;
@@ -93,6 +97,37 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public UserResponse updateProfile(String email, UpdateProfileRequest request) {
+        User user = userService.findByEmail(normalizeEmail(email))
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        user.setFirstName(request.getFirstName().trim());
+        user.setLastName(request.getLastName().trim());
+        user.setPhoneNumber(normalizeOptional(request.getPhoneNumber()));
+
+        return toUserResponse(userService.save(user));
+    }
+
+    @Override
+    public UserResponse updateAddress(String email, UpdateAddressRequest request) {
+        User user = userService.findByEmail(normalizeEmail(email))
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        user.setAddress(Address.builder()
+                .fullName(request.getFullName().trim())
+                .phoneNumber(request.getPhoneNumber().trim())
+                .addressLine1(request.getAddressLine1().trim())
+                .addressLine2(normalizeOptional(request.getAddressLine2()))
+                .city(request.getCity().trim())
+                .state(request.getState().trim())
+                .postalCode(request.getPostalCode().trim())
+                .country(request.getCountry().trim())
+                .build());
+
+        return toUserResponse(userService.save(user));
+    }
+
+    @Override
     public User processGoogleUser(String email, String firstName, String lastName, String pictureUrl) {
         String normalizedEmail = normalizeEmail(email);
         User user = userService.findByEmail(normalizedEmail).orElseGet(() -> User.builder()
@@ -134,11 +169,30 @@ public class AuthServiceImpl implements AuthService {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .pictureUrl(user.getPictureUrl())
+                .phoneNumber(user.getPhoneNumber())
+                .address(toAddressResponse(user.getAddress()))
                 .provider(user.getProvider())
                 .roles(user.getRoles())
                 .emailVerified(user.isEmailVerified())
                 .lastLoginAt(user.getLastLoginAt())
                 .createdAt(user.getCreatedAt())
+                .build();
+    }
+
+    private AddressResponse toAddressResponse(Address address) {
+        if (address == null) {
+            return null;
+        }
+
+        return AddressResponse.builder()
+                .fullName(address.getFullName())
+                .phoneNumber(address.getPhoneNumber())
+                .addressLine1(address.getAddressLine1())
+                .addressLine2(address.getAddressLine2())
+                .city(address.getCity())
+                .state(address.getState())
+                .postalCode(address.getPostalCode())
+                .country(address.getCountry())
                 .build();
     }
 
@@ -153,5 +207,14 @@ public class AuthServiceImpl implements AuthService {
 
     private String normalizeEmail(String email) {
         return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizeOptional(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

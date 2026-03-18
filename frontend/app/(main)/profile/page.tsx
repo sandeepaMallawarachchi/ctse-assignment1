@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { updateAuthUser } from "@/store/authSlice";
+import { fetchCurrentUser, saveAddress, saveProfile } from "@/store/authSlice";
 import { Button } from "@/components/ui/button";
 import type { AuthUser } from "@/store/types";
 
@@ -74,7 +74,7 @@ export default function ProfilePage() {
 
   return (
     <section className="mx-auto max-w-[1240px] px-4 py-12 md:px-8">
-      <ProfileEditor key={user.userId} user={user} />
+      <ProfileEditor key={JSON.stringify(user)} user={user} />
     </section>
   );
 }
@@ -82,29 +82,36 @@ export default function ProfilePage() {
 function ProfileEditor({ user }: { user: AuthUser }) {
   const dispatch = useAppDispatch();
   const initial = user.fullName.trim().charAt(0).toUpperCase() || "U";
-
-  const savedProfile = readStorage<ProfileForm>(`profile:${user.userId}`);
-  const savedAddress = readStorage<AddressForm>(`address:${user.userId}`);
   const fallbackName = splitFullName(user.fullName);
 
   const [profile, setProfile] = useState<ProfileForm>({
-    firstName: fallbackName.firstName,
-    lastName: fallbackName.lastName,
-    phoneNumber: "",
-    ...savedProfile,
+    firstName: user.firstName || fallbackName.firstName,
+    lastName: user.lastName || fallbackName.lastName,
+    phoneNumber: user.phoneNumber ?? "",
   });
   const [address, setAddress] = useState<AddressForm>(
-    savedAddress
-      ? { ...DEFAULT_ADDRESS, ...savedAddress }
+    user.address
+      ? {
+          ...DEFAULT_ADDRESS,
+          ...user.address,
+          addressLine2: user.address.addressLine2 ?? "",
+        }
       : {
-        ...DEFAULT_ADDRESS,
-        fullName: user.fullName,
-      }
+          ...DEFAULT_ADDRESS,
+          fullName: user.fullName,
+          phoneNumber: user.phoneNumber ?? "",
+        }
   );
   const [profileErrors, setProfileErrors] = useState<FieldErrors<ProfileForm>>({});
   const [addressErrors, setAddressErrors] = useState<FieldErrors<AddressForm>>({});
   const [profileMessage, setProfileMessage] = useState<string | null>(null);
   const [addressMessage, setAddressMessage] = useState<string | null>(null);
+  const [isProfileSaving, setIsProfileSaving] = useState(false);
+  const [isAddressSaving, setIsAddressSaving] = useState(false);
+
+  useEffect(() => {
+    void dispatch(fetchCurrentUser());
+  }, [dispatch]);
 
   function validateProfile(values: ProfileForm) {
     const errors: FieldErrors<ProfileForm> = {};
@@ -132,7 +139,7 @@ function ProfileEditor({ user }: { user: AuthUser }) {
     return errors;
   }
 
-  function handleProfileSave(e: React.FormEvent) {
+  async function handleProfileSave(e: React.FormEvent) {
     e.preventDefault();
 
     const errors = validateProfile(profile);
@@ -141,19 +148,31 @@ function ProfileEditor({ user }: { user: AuthUser }) {
 
     if (Object.keys(errors).length > 0) return;
 
-    localStorage.setItem(`profile:${user.userId}`, JSON.stringify(profile));
-    const fullName = `${profile.firstName} ${profile.lastName}`.trim();
-    dispatch(updateAuthUser({ fullName }));
+    setIsProfileSaving(true);
+    const result = await dispatch(
+      saveProfile({
+        firstName: profile.firstName.trim(),
+        lastName: profile.lastName.trim(),
+        phoneNumber: profile.phoneNumber,
+      })
+    );
+    setIsProfileSaving(false);
 
-    setAddress((current) => ({
-      ...current,
-      fullName: current.fullName.trim() ? current.fullName : fullName,
-      phoneNumber: current.phoneNumber.trim() ? current.phoneNumber : profile.phoneNumber,
-    }));
-    setProfileMessage("Profile details saved locally.");
+    if (saveProfile.fulfilled.match(result)) {
+      const fullName = `${profile.firstName} ${profile.lastName}`.trim();
+      setAddress((current) => ({
+        ...current,
+        fullName: current.fullName.trim() ? current.fullName : fullName,
+        phoneNumber: current.phoneNumber.trim() ? current.phoneNumber : profile.phoneNumber,
+      }));
+      setProfileMessage("Profile updated successfully.");
+      return;
+    }
+
+    setProfileMessage((result.payload as string) || "Failed to save profile.");
   }
 
-  function handleAddressSave(e: React.FormEvent) {
+  async function handleAddressSave(e: React.FormEvent) {
     e.preventDefault();
 
     const errors = validateAddress(address);
@@ -162,8 +181,27 @@ function ProfileEditor({ user }: { user: AuthUser }) {
 
     if (Object.keys(errors).length > 0) return;
 
-    localStorage.setItem(`address:${user.userId}`, JSON.stringify(address));
-    setAddressMessage("Address details saved locally.");
+    setIsAddressSaving(true);
+    const result = await dispatch(
+      saveAddress({
+        fullName: address.fullName.trim(),
+        phoneNumber: address.phoneNumber.trim(),
+        addressLine1: address.addressLine1.trim(),
+        addressLine2: address.addressLine2.trim(),
+        city: address.city.trim(),
+        state: address.state.trim(),
+        postalCode: address.postalCode.trim(),
+        country: address.country.trim(),
+      })
+    );
+    setIsAddressSaving(false);
+
+    if (saveAddress.fulfilled.match(result)) {
+      setAddressMessage("Address updated successfully.");
+      return;
+    }
+
+    setAddressMessage((result.payload as string) || "Failed to save address.");
   }
 
   return (
@@ -194,7 +232,7 @@ function ProfileEditor({ user }: { user: AuthUser }) {
             <div>
               <h3 className="text-[var(--color-text-1)]">Personal Details</h3>
               <p className="mt-2 text-[var(--color-text-2)]">
-                These values are saved in the frontend for now and will later connect to the profile API.
+                Update the details saved in your account profile.
               </p>
             </div>
           </div>
@@ -223,7 +261,9 @@ function ProfileEditor({ user }: { user: AuthUser }) {
 
           <div className="mt-6 flex items-center justify-between gap-4">
             <p className="text-sm text-[var(--color-text-2)]">{profileMessage ?? " "}</p>
-            <Button type="submit" variant="primary" size="lg">Save Profile</Button>
+            <Button type="submit" variant="primary" size="lg" disabled={isProfileSaving}>
+              {isProfileSaving ? "Saving..." : "Save Profile"}
+            </Button>
           </div>
         </form>
 
@@ -291,24 +331,14 @@ function ProfileEditor({ user }: { user: AuthUser }) {
 
           <div className="mt-6 flex items-center justify-between gap-4">
             <p className="text-sm text-[var(--color-text-2)]">{addressMessage ?? " "}</p>
-            <Button type="submit" variant="primary" size="lg">Save Address</Button>
+            <Button type="submit" variant="primary" size="lg" disabled={isAddressSaving}>
+              {isAddressSaving ? "Saving..." : "Save Address"}
+            </Button>
           </div>
         </form>
       </div>
     </div>
   );
-}
-
-function readStorage<T>(key: string): T | null {
-  if (typeof window === "undefined") return null;
-  const raw = localStorage.getItem(key);
-  if (!raw) return null;
-
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return null;
-  }
 }
 
 function Field({
@@ -336,10 +366,11 @@ function Field({
         value={value}
         readOnly={readOnly}
         onChange={(e) => onChange?.(e.target.value)}
-        className={`h-13 rounded border px-4 text-sm outline-none transition-colors ${readOnly
-          ? "border-black/10 bg-[var(--color-secondary)] text-[var(--color-text-2)]"
-          : "border-black/15 bg-white text-[var(--color-text-1)] focus:border-[var(--color-primary-btn)]"
-          }`}
+        className={`h-13 rounded border px-4 text-sm outline-none transition-colors ${
+          readOnly
+            ? "border-black/10 bg-[var(--color-secondary)] text-[var(--color-text-2)]"
+            : "border-black/15 bg-white text-[var(--color-text-1)] focus:border-[var(--color-primary-btn)]"
+        }`}
       />
       {error ? (
         <span className="text-xs text-[var(--color-primary-btn)]">{error}</span>

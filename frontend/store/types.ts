@@ -25,8 +25,21 @@ export interface CartState {
 }
 
 export interface AuthUser {
+  firstName: string;
+  lastName: string;
   userId: string;
   email: string;
+  phoneNumber: string | null;
+  address: {
+    fullName: string;
+    phoneNumber: string;
+    addressLine1: string;
+    addressLine2?: string | null;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+  } | null;
   fullName: string;
   roles: string[];
 }

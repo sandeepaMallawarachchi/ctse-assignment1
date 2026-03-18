@@ -8,10 +8,14 @@ const AUTH_SERVICE_URL = `${API_GATEWAY_URL}/api/auth`;
 export const GOOGLE_AUTH_URL = `${AUTH_SERVICE_URL}/google`;
 
 export interface AuthResponse {
+  firstName: string;
+  lastName: string;
   accessToken: string;
   tokenType: string;
   userId: string;
   email: string;
+  phoneNumber: string | null;
+  address: Address | null;
   fullName: string;
   roles: string[];
 }
@@ -36,11 +40,32 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface Address {
+  fullName: string;
+  phoneNumber: string;
+  addressLine1: string;
+  addressLine2?: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
+export interface UpdateProfileRequest {
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+}
+
+export type UpdateAddressRequest = Address;
+
 interface BackendUserResponse {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
+  phoneNumber?: string | null;
+  address?: Address | null;
   roles: string[];
 }
 
@@ -57,12 +82,23 @@ function mapAuthResponse(data: BackendAuthResponse): AuthResponse {
     .trim();
 
   return {
+    firstName: data.user.firstName ?? "",
+    lastName: data.user.lastName ?? "",
     accessToken: data.token,
     tokenType: data.tokenType,
     userId: data.user.id,
     email: data.user.email,
+    phoneNumber: data.user.phoneNumber ?? null,
+    address: data.user.address ?? null,
     fullName,
     roles: data.user.roles ?? [],
+  };
+}
+
+function authHeaders(token?: string): HeadersInit {
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
 
@@ -83,7 +119,7 @@ async function handleResponse<T>(res: Response): Promise<ApiResponse<T>> {
 export async function apiRegister(req: RegisterRequest): Promise<AuthResponse> {
   const res = await fetch(`${AUTH_SERVICE_URL}/register`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(),
     credentials: "include",
     body: JSON.stringify(req),
   });
@@ -94,7 +130,7 @@ export async function apiRegister(req: RegisterRequest): Promise<AuthResponse> {
 export async function apiLogin(req: LoginRequest): Promise<AuthResponse> {
   const res = await fetch(`${AUTH_SERVICE_URL}/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(),
     credentials: "include",
     body: JSON.stringify(req),
   });
@@ -109,4 +145,57 @@ export async function apiIssueToken(): Promise<AuthResponse> {
   });
   const body = await handleResponse<BackendAuthResponse>(res);
   return mapAuthResponse(body.data);
+}
+
+export async function apiGetCurrentUser(token: string): Promise<AuthResponse> {
+  const res = await fetch(`${AUTH_SERVICE_URL}/me`, {
+    method: "GET",
+    headers: authHeaders(token),
+    credentials: "include",
+  });
+  const body = await handleResponse<BackendUserResponse>(res);
+  return mapAuthResponse({
+    token,
+    tokenType: "Bearer",
+    user: body.data,
+  });
+}
+
+export async function apiUpdateProfile(
+  token: string,
+  req: UpdateProfileRequest
+): Promise<AuthResponse> {
+  const res = await fetch(`${AUTH_SERVICE_URL}/profile`, {
+    method: "PUT",
+    headers: authHeaders(token),
+    credentials: "include",
+    body: JSON.stringify({
+      ...req,
+      phoneNumber: req.phoneNumber?.trim() ? req.phoneNumber.trim() : "",
+    }),
+  });
+  const body = await handleResponse<BackendUserResponse>(res);
+  return mapAuthResponse({
+    token,
+    tokenType: "Bearer",
+    user: body.data,
+  });
+}
+
+export async function apiUpdateAddress(
+  token: string,
+  req: UpdateAddressRequest
+): Promise<AuthResponse> {
+  const res = await fetch(`${AUTH_SERVICE_URL}/address`, {
+    method: "PUT",
+    headers: authHeaders(token),
+    credentials: "include",
+    body: JSON.stringify(req),
+  });
+  const body = await handleResponse<BackendUserResponse>(res);
+  return mapAuthResponse({
+    token,
+    tokenType: "Bearer",
+    user: body.data,
+  });
 }
