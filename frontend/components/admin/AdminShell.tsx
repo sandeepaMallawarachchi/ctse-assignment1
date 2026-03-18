@@ -2,14 +2,15 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Boxes,
+  ChevronRight,
   LayoutDashboard,
   LogOut,
   Menu,
-  Package,
   Shield,
   ShoppingBag,
   Users,
@@ -80,37 +81,43 @@ export default function AdminShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f4ec] text-[var(--color-text-1)]">
-      <header className="sticky top-0 z-40 border-b border-black/10 bg-white/95 backdrop-blur">
-        <div className="flex items-center justify-between px-4 py-4 md:px-8">
+    <div className="min-h-screen bg-[var(--color-primary)] text-[var(--color-text-1)]">
+      <header className="sticky top-0 z-40 border-b border-black/10 bg-[var(--color-primary)]">
+        <div className="bg-[var(--color-primary-2)] text-white">
+          <div className="mx-auto flex max-w-[1440px] items-center justify-between px-4 py-3 md:px-8">
+            <p className="w-full text-center text-sm">
+              Admin workspace for Exclusive store operations
+            </p>
+          </div>
+        </div>
+
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-4 py-4 md:px-8">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setSidebarOpen((prev) => !prev)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/10 text-[var(--color-text-1)] lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-black/10 text-[var(--color-text-1)] lg:hidden"
               aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
             >
               {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
-            <Link href="/admin" className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--color-primary-btn)] text-white shadow-[0_14px_32px_rgba(219,68,68,0.25)]">
-                <Shield size={20} />
-              </span>
+            <Link href="/admin" className="flex items-center gap-4">
+              <Image src="/logo.webp" alt="Exclusive" width={100} height={36} />
               <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-[var(--color-primary-btn)]">Admin Panel</p>
-                <p className="text-sm font-semibold">Exclusive Control Center</p>
+                <p className="text-xs uppercase tracking-[0.22em] text-[var(--color-primary-btn)]">Admin Panel</p>
+                <p className="text-sm font-medium">Operations Dashboard</p>
               </div>
             </Link>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden rounded-full bg-[#f7f4ec] px-4 py-2 text-sm md:block">
+            <div className="hidden rounded-lg bg-[var(--color-secondary)] px-4 py-2 text-sm md:block">
               Signed in as <span className="font-medium">{auth.user?.fullName}</span>
             </div>
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium hover:bg-[#f7f4ec]"
+              className="inline-flex items-center gap-2 rounded-lg border border-black/10 bg-white px-4 py-2 text-sm font-medium hover:bg-[var(--color-secondary)]"
             >
               <LogOut size={16} />
               Logout
@@ -119,16 +126,8 @@ export default function AdminShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <div className="grid min-h-[calc(100vh-81px)] lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-[81px] left-0 z-30 w-[280px] border-r border-black/10 bg-[#121212] px-5 py-6 text-white transition-transform lg:static lg:translate-x-0`}>
-          <div className="rounded-3xl bg-white/8 p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-white/50">Workspace</p>
-            <h2 className="mt-3 text-xl font-semibold">Admin Dashboard</h2>
-            <p className="mt-2 text-sm text-white/70">
-              Sample frontend shell with separate navigation, ready for backend integration.
-            </p>
-          </div>
-
+      <div className="mx-auto grid min-h-[calc(100vh-129px)] max-w-[1440px] lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-[129px] left-0 z-30 w-[280px] border-r border-black/10 bg-white px-5 py-6 transition-transform lg:static lg:translate-x-0`}>
           <nav className="mt-8 space-y-2">
             {navItems.map(({ href, label, icon: Icon }) => {
               const active = pathname === href;
@@ -137,33 +136,21 @@ export default function AdminShell({ children }: { children: ReactNode }) {
                   key={href}
                   href={href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition ${
+                  className={`flex items-center justify-between rounded-lg px-4 py-3 text-sm transition ${
                     active
-                      ? "bg-[var(--color-primary-btn)] text-white shadow-[0_16px_32px_rgba(219,68,68,0.3)]"
-                      : "text-white/80 hover:bg-white/10 hover:text-white"
+                      ? "bg-[var(--color-primary-btn)] text-white"
+                      : "text-[var(--color-text-1)] hover:bg-[var(--color-secondary)]"
                   }`}
                 >
-                  <Icon size={18} />
-                  {label}
+                  <span className="flex items-center gap-3">
+                    <Icon size={18} />
+                    {label}
+                  </span>
+                  <ChevronRight size={16} className={active ? "opacity-100" : "opacity-40"} />
                 </Link>
               );
             })}
           </nav>
-
-          <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-4">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#121212]">
-                <Package size={18} />
-              </span>
-              <div>
-                <p className="text-sm font-medium">Mode</p>
-                <p className="text-xs text-white/60">Demo data only</p>
-              </div>
-            </div>
-            <p className="mt-3 text-sm text-white/70">
-              Product, order, and user cards here are sample placeholders until backend modules are connected.
-            </p>
-          </div>
         </aside>
 
         {sidebarOpen && (
@@ -175,7 +162,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
           />
         )}
 
-        <main className="px-4 py-6 md:px-8 md:py-8">{children}</main>
+        <main className="bg-[var(--color-primary)] px-4 py-6 md:px-8 md:py-8">{children}</main>
       </div>
     </div>
   );

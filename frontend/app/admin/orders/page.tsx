@@ -17,7 +17,7 @@ export default function AdminOrdersPage() {
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {sampleOrders.map((order) => (
-          <article key={order.id} className="rounded-[24px] border border-black/8 bg-white p-6">
+          <article key={order.id} className="rounded-lg border border-black/10 bg-white p-6">
             <p className="text-xs uppercase tracking-[0.16em] text-[var(--color-text-2)]">Order</p>
             <h2 className="mt-3 text-xl font-semibold">{order.id}</h2>
             <p className="mt-4 text-sm text-[var(--color-text-2)]">Customer</p>
@@ -27,7 +27,7 @@ export default function AdminOrdersPage() {
                 <p className="text-sm text-[var(--color-text-2)]">Total</p>
                 <p className="mt-1 font-medium">{order.total}</p>
               </div>
-              <span className="rounded-full bg-[var(--color-secondary-2)] px-3 py-1 text-xs font-medium text-[var(--color-primary-btn)]">
+              <span className="rounded-lg bg-[var(--color-secondary-2)] px-3 py-1 text-xs font-medium text-[var(--color-primary-btn)]">
                 {order.state}
               </span>
             </div>

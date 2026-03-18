@@ -15,15 +15,15 @@ export default function AdminUsersPage() {
         </p>
       </div>
 
-      <div className="rounded-[28px] border border-black/8 bg-white p-4 md:p-6">
+      <div className="rounded-lg border border-black/10 bg-white p-4 md:p-6">
         <div className="grid gap-4">
           {sampleUsers.map((user) => (
-            <div key={user.email} className="flex flex-col gap-4 rounded-2xl border border-black/6 px-4 py-4 md:flex-row md:items-center md:justify-between">
+            <div key={user.email} className="flex flex-col gap-4 rounded-lg border border-black/10 px-4 py-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="font-medium text-[var(--color-text-1)]">{user.name}</p>
                 <p className="mt-1 text-sm text-[var(--color-text-2)]">{user.email}</p>
               </div>
-              <span className="inline-flex rounded-full bg-[var(--color-secondary)] px-3 py-1 text-xs font-medium text-[var(--color-text-2)]">
+              <span className="inline-flex rounded-lg bg-[var(--color-secondary)] px-3 py-1 text-xs font-medium text-[var(--color-text-2)]">
                 {user.role}
               </span>
             </div>

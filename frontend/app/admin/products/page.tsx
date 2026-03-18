@@ -15,11 +15,11 @@ export default function AdminProductsPage() {
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-[28px] border border-black/8 bg-white">
+      <div className="overflow-hidden rounded-lg border border-black/10 bg-white">
         {sampleProducts.map((product, index) => (
           <div
             key={product.sku}
-            className={`grid gap-4 px-6 py-5 md:grid-cols-4 ${index !== sampleProducts.length - 1 ? "border-b border-black/6" : ""}`}
+            className={`grid gap-4 px-6 py-5 md:grid-cols-4 ${index !== sampleProducts.length - 1 ? "border-b border-black/10" : ""}`}
           >
             <div>
               <p className="text-xs uppercase tracking-[0.14em] text-[var(--color-text-2)]">Product</p>
