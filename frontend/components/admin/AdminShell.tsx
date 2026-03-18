@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Boxes,
   ChevronRight,
+  FolderTree,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -23,6 +24,7 @@ import { useToast } from "@/components/ui/toast";
 const navItems = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Boxes },
+  { href: "/admin/categories", label: "Categories", icon: FolderTree },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { href: "/admin/users", label: "Users", icon: Users },
 ] as const;

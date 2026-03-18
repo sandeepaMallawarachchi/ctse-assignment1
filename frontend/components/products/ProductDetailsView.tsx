@@ -91,14 +91,14 @@ export default function ProductDetailsView({ product, relatedProducts }: Product
                 alt={`${product.name} thumbnail ${index + 1}`}
                 fill
                 unoptimized={/^https?:\/\//i.test(image)}
-                className="object-contain p-5"
+                className="object-contain p-3"
               />
             </button>
           ))}
         </div>
 
         <div className="order-1 relative h-[400px] overflow-hidden rounded bg-(--color-secondary) sm:h-full lg:order-2">
-          <Image src={selectedImage} alt={product.name} fill unoptimized={isRemoteSelectedImage} className="object-contain p-10" />
+          <Image src={selectedImage} alt={product.name} fill unoptimized={isRemoteSelectedImage} className="object-contain p-5" />
         </div>
 
         <div className="order-3">

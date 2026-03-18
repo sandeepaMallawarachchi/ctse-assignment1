@@ -34,6 +34,9 @@ public class ProductCreateRequest {
     @Size(max = 80, message = "Category must be less than 80 characters")
     private String category;
 
+    @Size(max = 80, message = "Subcategory must be less than 80 characters")
+    private String subCategory;
+
     @NotNull(message = "Price is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")
     private BigDecimal price;
