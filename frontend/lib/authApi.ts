@@ -59,6 +59,18 @@ export interface UpdateProfileRequest {
 
 export type UpdateAddressRequest = Address;
 
+export interface AdminUserResponse {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string | null;
+  roles: string[];
+  emailVerified: boolean;
+  lastLoginAt?: string | null;
+  createdAt?: string | null;
+}
+
 interface BackendUserResponse {
   id: string;
   email: string;
@@ -207,4 +219,14 @@ export async function apiUpdateAddress(
     tokenType: "Bearer",
     user: body.data,
   });
+}
+
+export async function apiGetAdminUsers(token: string): Promise<AdminUserResponse[]> {
+  const res = await fetch(`${AUTH_SERVICE_URL}/admin/users`, {
+    method: "GET",
+    headers: authHeaders(token),
+    credentials: "include",
+  });
+  const body = await handleResponse<AdminUserResponse[]>(res);
+  return body.data ?? [];
 }

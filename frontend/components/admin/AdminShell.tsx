@@ -11,7 +11,6 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Shield,
   ShoppingBag,
   Users,
   X,
