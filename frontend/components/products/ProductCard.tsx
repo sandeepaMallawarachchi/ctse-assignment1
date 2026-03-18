@@ -143,14 +143,14 @@ export default function ProductCard({
           </IconButton>
         </div>
 
-        <div className="flex h-full items-center justify-center px-4 pb-8">
+        <div className="flex h-full items-center justify-center pb-8">
           <Image
             src={product.imageUrl}
             alt={product.name}
             width={180}
             height={160}
             unoptimized={isRemoteImage}
-            className="h-40 w-45 object-contain"
+            className="h-44 w-52 object-contain"
           />
         </div>
 
