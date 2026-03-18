@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchCurrentUser, saveAddress, saveProfile } from "@/store/authSlice";
 import { Button } from "@/components/ui/button";
 import type { AuthUser } from "@/store/types";
+import { useToast } from "@/components/ui/toast";
 
 type ProfileForm = {
   firstName: string;
@@ -81,6 +82,7 @@ export default function ProfilePage() {
 
 function ProfileEditor({ user }: { user: AuthUser }) {
   const dispatch = useAppDispatch();
+  const { showToast } = useToast();
   const initial = user.fullName.trim().charAt(0).toUpperCase() || "U";
   const fallbackName = splitFullName(user.fullName);
 
@@ -166,10 +168,21 @@ function ProfileEditor({ user }: { user: AuthUser }) {
         phoneNumber: current.phoneNumber.trim() ? current.phoneNumber : profile.phoneNumber,
       }));
       setProfileMessage("Profile updated successfully.");
+      showToast({
+        title: "Profile updated",
+        description: "Your personal details were saved successfully.",
+        variant: "success",
+      });
       return;
     }
 
-    setProfileMessage((result.payload as string) || "Failed to save profile.");
+    const message = (result.payload as string) || "Failed to save profile.";
+    setProfileMessage(message);
+    showToast({
+      title: "Profile update failed",
+      description: message,
+      variant: "error",
+    });
   }
 
   async function handleAddressSave(e: React.FormEvent) {
@@ -198,10 +211,21 @@ function ProfileEditor({ user }: { user: AuthUser }) {
 
     if (saveAddress.fulfilled.match(result)) {
       setAddressMessage("Address updated successfully.");
+      showToast({
+        title: "Address updated",
+        description: "Your saved address was updated successfully.",
+        variant: "success",
+      });
       return;
     }
 
-    setAddressMessage((result.payload as string) || "Failed to save address.");
+    const message = (result.payload as string) || "Failed to save address.";
+    setAddressMessage(message);
+    showToast({
+      title: "Address update failed",
+      description: message,
+      variant: "error",
+    });
   }
 
   return (

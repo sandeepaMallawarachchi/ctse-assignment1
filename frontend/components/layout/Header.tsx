@@ -6,7 +6,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, Heart, LogOut, Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { clearToken } from "@/store/authSlice";
+import { clearToken, logoutUser } from "@/store/authSlice";
+import { hasAdminRole } from "@/lib/authRoles";
+import { useToast } from "@/components/ui/toast";
 
 const guestNavLinks = [
   { label: "Home", href: "/" },
@@ -27,13 +29,23 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { showToast } = useToast();
   const totalItems = useAppSelector((state) => state.cart.totalItems);
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const isAdmin = hasAdminRole(user?.roles);
 
-  function handleLogout() {
+  async function handleLogout() {
+    const result = await dispatch(logoutUser());
     dispatch(clearToken());
     setIsUserMenuOpen(false);
+    showToast({
+      title: logoutUser.fulfilled.match(result) ? "Logged out" : "Logout completed locally",
+      description: logoutUser.fulfilled.match(result)
+        ? "Your session has been cleared."
+        : ((result.payload as string) || "Server logout did not complete, but local session was cleared."),
+      variant: logoutUser.fulfilled.match(result) ? "success" : "info",
+    });
     router.push("/");
   }
 
@@ -136,6 +148,16 @@ export default function Header() {
                       <User size={15} />
                       My Profile
                     </Link>
+                    {isAdmin && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex w-full items-center gap-2 px-4 py-2 text-sm text-(--color-text-1) hover:bg-(--color-secondary)"
+                      >
+                        <ChevronDown size={15} />
+                        Admin Dashboard
+                      </Link>
+                    )}
                     <button
                       type="button"
                       onClick={handleLogout}

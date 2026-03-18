@@ -4,6 +4,7 @@ import {
   apiGetCurrentUser,
   apiIssueToken,
   apiLogin,
+  apiLogout,
   apiRegister,
   apiUpdateAddress,
   apiUpdateProfile,
@@ -20,6 +21,7 @@ const initialState: AuthState = {
   token: null,
   isAuthenticated: false,
   user: null,
+  hydrated: false,
 };
 
 export const loginUser = createAsyncThunk(
@@ -67,6 +69,18 @@ export const fetchCurrentUser = createAsyncThunk(
       return await apiGetCurrentUser(auth.token);
     } catch (err: unknown) {
       return rejectWithValue(err instanceof Error ? err.message : "Failed to load profile");
+    }
+  }
+);
+
+export const logoutUser = createAsyncThunk(
+  "auth/logoutUser",
+  async (_, { rejectWithValue }) => {
+    try {
+      await apiLogout();
+      return true;
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : "Logout failed");
     }
   }
 );
@@ -133,11 +147,13 @@ const authSlice = createSlice({
       state.token = accessToken;
       state.isAuthenticated = true;
       state.user = user;
+      state.hydrated = true;
       persistAuth(accessToken, user);
     },
     setToken(state, action: PayloadAction<string>) {
       state.token = action.payload;
       state.isAuthenticated = true;
+      state.hydrated = true;
       if (typeof window !== "undefined") {
         localStorage.setItem("token", action.payload);
       }
@@ -146,6 +162,7 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.user = null;
+      state.hydrated = true;
       if (typeof window !== "undefined") {
         localStorage.removeItem("token");
         localStorage.removeItem("authUser");
@@ -167,6 +184,7 @@ const authSlice = createSlice({
           }
         }
       }
+      state.hydrated = true;
     },
     updateAuthUser(state, action: PayloadAction<{ fullName: string }>) {
       if (!state.user) return;
@@ -192,6 +210,7 @@ const authSlice = createSlice({
         state.token = accessToken;
         state.isAuthenticated = true;
         state.user = user;
+        state.hydrated = true;
         persistAuth(accessToken, user);
       })
       .addCase(registerUser.fulfilled, (state, action) => {
@@ -200,6 +219,7 @@ const authSlice = createSlice({
         state.token = accessToken;
         state.isAuthenticated = true;
         state.user = user;
+        state.hydrated = true;
         persistAuth(accessToken, user);
       })
       .addCase(fetchAuthFromCookie.fulfilled, (state, action) => {
@@ -208,11 +228,13 @@ const authSlice = createSlice({
         state.token = accessToken;
         state.isAuthenticated = true;
         state.user = user;
+        state.hydrated = true;
         persistAuth(accessToken, user);
       })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
         const user = toAuthUser(action.payload);
         state.user = user;
+        state.hydrated = true;
         if (state.token) {
           persistAuth(state.token, user);
         }
@@ -220,6 +242,7 @@ const authSlice = createSlice({
       .addCase(saveProfile.fulfilled, (state, action) => {
         const user = toAuthUser(action.payload);
         state.user = user;
+        state.hydrated = true;
         if (state.token) {
           persistAuth(state.token, user);
         }
@@ -227,8 +250,19 @@ const authSlice = createSlice({
       .addCase(saveAddress.fulfilled, (state, action) => {
         const user = toAuthUser(action.payload);
         state.user = user;
+        state.hydrated = true;
         if (state.token) {
           persistAuth(state.token, user);
+        }
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.token = null;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.hydrated = true;
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("token");
+          localStorage.removeItem("authUser");
         }
       });
   },

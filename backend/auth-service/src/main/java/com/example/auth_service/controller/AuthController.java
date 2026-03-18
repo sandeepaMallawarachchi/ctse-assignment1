@@ -14,10 +14,12 @@ import com.example.auth_service.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -59,8 +61,17 @@ public class AuthController {
     @PostMapping("/logout")
     @Operation(summary = "Logout and clear auth cookie")
     public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest httpRequest) {
+        HttpSession session = httpRequest.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, jwtCookieService.clearAuthCookie().toString())
+                .header(
+                        HttpHeaders.SET_COOKIE,
+                        jwtCookieService.clearAuthCookie().toString(),
+                        clearSessionCookie().toString()
+                )
                 .body(body(HttpStatus.OK, "Logout successful", httpRequest.getRequestURI(), null));
     }
 
@@ -122,6 +133,16 @@ public class AuthController {
                 .message(message)
                 .path(path)
                 .data(data)
+                .build();
+    }
+
+    private ResponseCookie clearSessionCookie() {
+        return ResponseCookie.from("JSESSIONID", "")
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(0)
                 .build();
     }
 

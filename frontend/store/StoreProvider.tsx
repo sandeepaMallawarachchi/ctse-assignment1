@@ -6,6 +6,7 @@ import { ReactNode, useEffect } from "react";
 import { useAppDispatch } from "./hooks";
 import { loadTokenFromStorage } from "./authSlice";
 import { fetchCart } from "./cartSlice";
+import { ToastProvider } from "@/components/ui/toast";
 
 /** Runs once on mount: hydrate auth token from localStorage, then load cart. */
 function CartInitializer() {
@@ -23,8 +24,10 @@ function CartInitializer() {
 export default function StoreProvider({ children }: { children: ReactNode }) {
   return (
     <Provider store={store}>
-      <CartInitializer />
-      {children}
+      <ToastProvider>
+        <CartInitializer />
+        {children}
+      </ToastProvider>
     </Provider>
   );
 }

@@ -5,27 +5,42 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { useAppDispatch } from "@/store/hooks";
-import { registerUser } from "@/store/authSlice";
+import { registerUser, saveProfile } from "@/store/authSlice";
 import { fetchCart } from "@/store/cartSlice";
 import { GOOGLE_AUTH_URL } from "@/lib/authApi";
+import { hasAdminRole } from "@/lib/authRoles";
+import { useToast } from "@/components/ui/toast";
 
 export default function RegisterPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const { showToast } = useToast();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<{
     firstName?: string;
     lastName?: string;
     email?: string;
+    phoneNumber?: string;
     password?: string;
+    confirmPassword?: string;
     general?: string;
   }>({});
   const [loading, setLoading] = useState(false);
+
+  const passwordMatchState =
+    !confirmPassword
+      ? null
+      : password === confirmPassword
+        ? "match"
+        : "mismatch";
 
   function validate() {
     const errs: typeof errors = {};
@@ -33,11 +48,15 @@ export default function RegisterPage() {
     if (!lastName.trim()) errs.lastName = "Last name is required.";
     if (!email.trim()) errs.email = "Email is required.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = "Enter a valid email address.";
+    if (!phoneNumber.trim()) errs.phoneNumber = "Phone number is required.";
+    else if (!/^[0-9+\-()\s]{7,20}$/.test(phoneNumber)) errs.phoneNumber = "Enter a valid phone number.";
     if (!password) errs.password = "Password is required.";
     else if (password.length < 8) errs.password = "Password must be at least 8 characters.";
     else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/.test(password)) {
       errs.password = "Password must include uppercase, lowercase, and a number.";
     }
+    if (!confirmPassword) errs.confirmPassword = "Please confirm your password.";
+    else if (password !== confirmPassword) errs.confirmPassword = "Passwords do not match.";
     return errs;
   }
 
@@ -54,10 +73,31 @@ export default function RegisterPage() {
     const result = await dispatch(registerUser({ firstName, lastName, email, password }));
 
     if (registerUser.fulfilled.match(result)) {
+      const profileResult = await dispatch(
+        saveProfile({
+          firstName,
+          lastName,
+          phoneNumber,
+        })
+      );
       await dispatch(fetchCart());
-      router.push("/");
+      showToast({
+        title: "Account created",
+        description:
+          saveProfile.fulfilled.match(profileResult)
+            ? "Your account and profile details were saved."
+            : "Your account was created. Phone number can be updated from profile.",
+        variant: "success",
+      });
+      router.push(hasAdminRole(result.payload.roles) ? "/admin" : "/");
     } else {
-      setErrors({ general: (result.payload as string) || "Registration failed. Please try again." });
+      const message = (result.payload as string) || "Registration failed. Please try again.";
+      setErrors({ general: message });
+      showToast({
+        title: "Registration failed",
+        description: message,
+        variant: "error",
+      });
     }
 
     setLoading(false);
@@ -124,13 +164,29 @@ export default function RegisterPage() {
                 type="email"
                 autoComplete="email"
                 required
-                placeholder="Email or Phone Number"
+                placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="border-b border-black/20 bg-transparent py-2 text-sm text-[var(--color-text-1)] placeholder:text-[var(--color-text-2)] outline-none focus:border-[var(--color-primary-btn)] transition-colors"
               />
               {errors.email && (
                 <span className="text-xs text-[var(--color-primary-btn)]">{errors.email}</span>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <input
+                id="phoneNumber"
+                type="tel"
+                autoComplete="tel"
+                required
+                placeholder="Phone Number"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="border-b border-black/20 bg-transparent py-2 text-sm text-[var(--color-text-1)] placeholder:text-[var(--color-text-2)] outline-none focus:border-[var(--color-primary-btn)] transition-colors"
+              />
+              {errors.phoneNumber && (
+                <span className="text-xs text-[var(--color-primary-btn)]">{errors.phoneNumber}</span>
               )}
             </div>
 
@@ -158,6 +214,36 @@ export default function RegisterPage() {
               {errors.password && (
                 <span className="text-xs text-[var(--color-primary-btn)]">{errors.password}</span>
               )}
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  required
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full border-b border-black/20 bg-transparent py-2 pr-10 text-sm text-[var(--color-text-1)] placeholder:text-[var(--color-text-2)] outline-none focus:border-[var(--color-primary-btn)] transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  className="absolute right-0 top-2 text-[var(--color-text-2)] hover:text-[var(--color-text-1)]"
+                  aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {errors.confirmPassword ? (
+                <span className="text-xs text-[var(--color-primary-btn)]">{errors.confirmPassword}</span>
+              ) : passwordMatchState === "match" ? (
+                <span className="text-xs text-green-600">Passwords match.</span>
+              ) : passwordMatchState === "mismatch" ? (
+                <span className="text-xs text-[var(--color-primary-btn)]">Passwords do not match.</span>
+              ) : null}
             </div>
 
             {errors.general && (

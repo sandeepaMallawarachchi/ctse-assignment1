@@ -48,4 +48,5 @@ export interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   user: AuthUser | null;
+  hydrated: boolean;
 }
