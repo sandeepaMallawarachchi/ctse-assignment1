@@ -6,10 +6,11 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/components/products/ProductCard";
+import { formatLkr } from "@/lib/currency";
 import RelatedProducts from "./RelatedProducts";
 
-type ProductDetails = {
-  id: number;
+export type ProductDetails = {
+  id: string | number;
   slug: string;
   name: string;
   price: number;
@@ -28,7 +29,15 @@ type ProductDetailsViewProps = {
   relatedProducts: Product[];
 };
 
-function Rating({ rating, reviewCount }: { rating: number; reviewCount: number }) {
+function Rating({
+  rating,
+  reviewCount,
+  inStock,
+}: {
+  rating: number;
+  reviewCount: number;
+  inStock: boolean;
+}) {
   const fullStars = Math.floor(rating);
 
   return (
@@ -45,7 +54,9 @@ function Rating({ rating, reviewCount }: { rating: number; reviewCount: number }
       </div>
       <span className="text-(--color-text-2)">({reviewCount} Reviews)</span>
       <span className="text-(--color-text-2)">|</span>
-      <span className="text-[var(--color-btn-3)]">In Stock</span>
+      <span className={inStock ? "text-[var(--color-btn-3)]" : "text-[var(--color-primary-btn)]"}>
+        {inStock ? "In Stock" : "Out of Stock"}
+      </span>
     </div>
   );
 }
@@ -54,8 +65,12 @@ export default function ProductDetailsView({ product, relatedProducts }: Product
   const [selectedImage, setSelectedImage] = useState(product.gallery[0]);
   const [selectedSize, setSelectedSize] = useState(product.sizes[2] ?? product.sizes[0]);
   const [quantity, setQuantity] = useState(1);
+  const isRemoteSelectedImage = /^https?:\/\//i.test(selectedImage);
 
-  const priceLabel = useMemo(() => `$${product.price.toFixed(2)}`, [product.price]);
+  const priceLabel = useMemo(
+    () => formatLkr(product.price, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    [product.price]
+  );
 
   return (
     <section className="mx-auto max-w-[1240px] px-4 py-20 md:px-8">
@@ -71,20 +86,26 @@ export default function ProductDetailsView({ product, relatedProducts }: Product
               }`}
               aria-label={`Select image ${index + 1}`}
             >
-              <Image src={image} alt={`${product.name} thumbnail ${index + 1}`} fill className="object-contain p-5" />
+              <Image
+                src={image}
+                alt={`${product.name} thumbnail ${index + 1}`}
+                fill
+                unoptimized={/^https?:\/\//i.test(image)}
+                className="object-contain p-5"
+              />
             </button>
           ))}
         </div>
 
         <div className="order-1 relative h-[400px] overflow-hidden rounded bg-(--color-secondary) sm:h-full lg:order-2">
-          <Image src={selectedImage} alt={product.name} fill className="object-contain p-10" />
+          <Image src={selectedImage} alt={product.name} fill unoptimized={isRemoteSelectedImage} className="object-contain p-10" />
         </div>
 
         <div className="order-3">
           <h2 className="font-semibold text-(--color-text-1)">{product.name}</h2>
 
           <div className="mt-4">
-            <Rating rating={product.rating} reviewCount={product.reviewCount} />
+            <Rating rating={product.rating} reviewCount={product.reviewCount} inStock={product.inStock} />
           </div>
 
           <h5 className="mt-4 text-4xl text-(--color-text-1)">{priceLabel}</h5>

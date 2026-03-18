@@ -1,7 +1,7 @@
 import Link from "next/link";
 import ProductCard, { type Product } from "../products/ProductCard";
 
-const products: Product[] = [
+const fallbackProducts: Product[] = [
   {
     id: 1,
     name: "The north coat",
@@ -40,7 +40,7 @@ const products: Product[] = [
   },
 ];
 
-export default function BestSelling() {
+export default function BestSelling({ products = fallbackProducts }: { products?: Product[] }) {
   return (
     <section className="mx-auto max-w-[1240px] px-4 py-14 md:px-8">
       <div className="mb-5 flex items-center gap-3">

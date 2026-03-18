@@ -19,6 +19,8 @@ public interface ProductService {
 
     List<ProductResponse> getAllProducts();
 
+    List<ProductResponse> getAllProductsForAdmin();
+
     List<ProductResponse> getProductsByCategory(String category);
 
     ProductResponse updateStock(String productId, Integer stockQuantity);

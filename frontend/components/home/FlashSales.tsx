@@ -17,7 +17,7 @@ const countdownData: CountdownValue[] = [
     { label: "Seconds", value: "56" },
 ];
 
-const products: Product[] = [
+const fallbackProducts: Product[] = [
     {
         id: 1,
         name: "HAVIT HV-G92 Gamepad",
@@ -95,7 +95,7 @@ function Countdown({ data }: { data: CountdownValue[] }) {
     );
 }
 
-export default function FlashSales() {
+export default function FlashSales({ products = fallbackProducts }: { products?: Product[] }) {
     const trackRef = useRef<HTMLDivElement | null>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);

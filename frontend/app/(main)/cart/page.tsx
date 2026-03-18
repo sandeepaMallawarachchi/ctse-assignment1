@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { removeCartItem, updateCartItem, clearCartThunk, applyCoupon, removeCoupon } from "@/store/cartSlice";
 import { Button } from "@/components/ui/button";
+import { formatLkr } from "@/lib/currency";
 
 export default function CartPage() {
   const dispatch = useAppDispatch();
@@ -95,7 +96,7 @@ export default function CartPage() {
 
                     {/* Price */}
                     <td className="px-6 py-5 text-sm text-[var(--color-text-1)]">
-                      ${item.price.toLocaleString()}
+                      {formatLkr(item.price)}
                     </td>
 
                     {/* Quantity */}
@@ -141,7 +142,7 @@ export default function CartPage() {
 
                     {/* Subtotal */}
                     <td className="px-6 py-5 text-sm font-medium text-[var(--color-text-1)]">
-                      ${(item.price * item.quantity).toLocaleString()}
+                      {formatLkr(item.price * item.quantity)}
                     </td>
                   </tr>
                 ))}
@@ -172,7 +173,7 @@ export default function CartPage() {
               {appliedCoupon ? (
                 <div className="flex items-center gap-3 rounded border border-green-400 bg-green-50 px-4 py-3">
                   <span className="text-sm font-medium text-green-700">
-                    Coupon <strong>{appliedCoupon.code}</strong> applied — you save ${appliedCoupon.discountAmount.toLocaleString()}
+                    Coupon <strong>{appliedCoupon.code}</strong> applied — you save {formatLkr(appliedCoupon.discountAmount)}
                   </span>
                   <button
                     type="button"
@@ -217,14 +218,14 @@ export default function CartPage() {
                 <div className="flex justify-between border-b border-[var(--color-text-2)]/30 pb-4">
                   <span className="text-sm text-[var(--color-text-1)]">Subtotal:</span>
                   <span className="text-sm font-medium text-[var(--color-text-1)]">
-                    ${totalAmount.toLocaleString()}
+                    {formatLkr(totalAmount)}
                   </span>
                 </div>
                 {appliedCoupon && (
                   <div className="flex justify-between border-b border-[var(--color-text-2)]/30 pb-4 text-green-600">
                     <span className="text-sm">Discount ({appliedCoupon.code}):</span>
                     <span className="text-sm font-medium">
-                      -${appliedCoupon.discountAmount.toLocaleString()}
+                      -{formatLkr(appliedCoupon.discountAmount)}
                     </span>
                   </div>
                 )}
@@ -235,7 +236,7 @@ export default function CartPage() {
                 <div className="flex justify-between">
                   <span className="text-sm text-[var(--color-text-1)]">Total:</span>
                   <span className="text-sm font-semibold text-[var(--color-text-1)]">
-                    ${finalAmount.toLocaleString()}
+                    {formatLkr(finalAmount)}
                   </span>
                 </div>
               </div>

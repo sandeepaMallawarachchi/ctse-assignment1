@@ -68,7 +68,7 @@ export default function Footer() {
 
           <div className="space-y-4 md:text-left text-center">
             <h3 className="font-medium">Download App</h3>
-            <p className="text-base text-white/70">Save $3 with App New User</p>
+            <p className="text-base text-white/70">Save LKR 3 with App New User</p>
 
             <div className="flex md:items-start md:justify-start justify-center gap-3">
               <Image src="/footer/qr.webp" alt="QR code" width={90} height={90} className="h-[90px] w-[90px]" />

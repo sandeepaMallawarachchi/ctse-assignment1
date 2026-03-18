@@ -5,9 +5,12 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";
 import { addCartItem } from "@/store/cartSlice";
+import { formatLkr } from "@/lib/currency";
+
+export type ProductId = string | number;
 
 export type Product = {
-  id: number;
+  id: ProductId;
   name: string;
   slug?: string;
   imageUrl: string;
@@ -23,16 +26,10 @@ export type Product = {
 
 type ProductCardProps = {
   product: Product;
-  onWishlistClick?: (productId: number) => void;
-  onQuickViewClick?: (productId: number) => void;
-  onAddToCartClick?: (productId: number) => void;
+  onWishlistClick?: (productId: ProductId) => void;
+  onQuickViewClick?: (productId: ProductId) => void;
+  onAddToCartClick?: (productId: ProductId) => void;
 };
-
-const priceFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
 
 function IconButton({
   label,
@@ -94,6 +91,7 @@ export default function ProductCard({
 }: ProductCardProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const isRemoteImage = /^https?:\/\//i.test(product.imageUrl);
   const shouldShowDiscount = (product.discountPercent ?? 0) > 0;
   const badgeLabel = product.badgeLabel ?? (shouldShowDiscount ? `-${product.discountPercent}%` : null);
   const badgeClassName =
@@ -151,6 +149,7 @@ export default function ProductCard({
             alt={product.name}
             width={180}
             height={160}
+            unoptimized={isRemoteImage}
             className="h-40 w-45 object-contain"
           />
         </div>
@@ -180,10 +179,10 @@ export default function ProductCard({
       </h5>
 
       <div className="mt-1.5 flex items-center gap-3 font-medium">
-        <h5 className="text-(--color-primary-btn)">{priceFormatter.format(product.currentPrice)}</h5>
+        <h5 className="text-(--color-primary-btn)">{formatLkr(product.currentPrice)}</h5>
         {product.previousPrice > 0 ? (
           <h5 className="text-(--color-text-1)/50 line-through">
-            {priceFormatter.format(product.previousPrice)}
+            {formatLkr(product.previousPrice)}
           </h5>
         ) : null}
       </div>

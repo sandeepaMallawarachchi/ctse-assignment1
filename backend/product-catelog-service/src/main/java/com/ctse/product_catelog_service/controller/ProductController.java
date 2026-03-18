@@ -89,6 +89,13 @@ public class ProductController {
         return ResponseEntity.ok(response(HttpStatus.OK, "Products fetched successfully", httpRequest.getRequestURI(), products));
     }
 
+    @GetMapping("/admin/all")
+    @Operation(summary = "Get all products for admin")
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> getAllProductsForAdmin(HttpServletRequest httpRequest) {
+        List<ProductResponse> products = productService.getAllProductsForAdmin();
+        return ResponseEntity.ok(response(HttpStatus.OK, "Products fetched successfully", httpRequest.getRequestURI(), products));
+    }
+
     @GetMapping("/category/{category}")
     @Operation(summary = "Get products by category")
     public ResponseEntity<ApiResponse<List<ProductResponse>>> getProductsByCategory(

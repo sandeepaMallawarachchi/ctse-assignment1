@@ -1,7 +1,7 @@
 const sampleOrders = [
-  { id: "#EX-2301", customer: "Ava Thompson", total: "$320", state: "Packed" },
-  { id: "#EX-2302", customer: "Noah Silva", total: "$180", state: "Pending" },
-  { id: "#EX-2303", customer: "Mia Patel", total: "$760", state: "Shipped" },
+  { id: "#EX-2301", customer: "Ava Thompson", total: "LKR 320", state: "Packed" },
+  { id: "#EX-2302", customer: "Noah Silva", total: "LKR 180", state: "Pending" },
+  { id: "#EX-2303", customer: "Mia Patel", total: "LKR 760", state: "Shipped" },
 ] as const;
 
 export default function AdminOrdersPage() {
