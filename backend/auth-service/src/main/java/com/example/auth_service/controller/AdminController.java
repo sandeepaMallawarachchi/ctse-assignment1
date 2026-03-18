@@ -9,7 +9,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,6 +36,46 @@ public class AdminController {
                 .message("Users fetched successfully")
                 .path(request.getRequestURI())
                 .data(authService.getAllUsers())
+                .build());
+    }
+
+    @PutMapping("/users/{userId}/deactivate")
+    @Operation(summary = "Deactivate a user account (Admin)")
+    public ResponseEntity<ApiResponse<UserResponse>> deactivateUser(@PathVariable String userId,
+                                                                    HttpServletRequest request) {
+        return ResponseEntity.ok(ApiResponse.<UserResponse>builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.OK.value())
+                .message("User deactivated successfully")
+                .path(request.getRequestURI())
+                .data(authService.deactivateUser(userId))
+                .build());
+    }
+
+    @PutMapping("/users/{userId}/activate")
+    @Operation(summary = "Activate a user account (Admin)")
+    public ResponseEntity<ApiResponse<UserResponse>> activateUser(@PathVariable String userId,
+                                                                  HttpServletRequest request) {
+        return ResponseEntity.ok(ApiResponse.<UserResponse>builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.OK.value())
+                .message("User activated successfully")
+                .path(request.getRequestURI())
+                .data(authService.activateUser(userId))
+                .build());
+    }
+
+    @DeleteMapping("/users/{userId}")
+    @Operation(summary = "Delete a user account (Admin)")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable String userId,
+                                                        HttpServletRequest request) {
+        authService.deleteUser(userId);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.OK.value())
+                .message("User deleted successfully")
+                .path(request.getRequestURI())
+                .data(null)
                 .build());
     }
 }

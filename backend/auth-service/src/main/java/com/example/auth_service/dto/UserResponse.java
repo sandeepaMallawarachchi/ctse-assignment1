@@ -20,6 +20,7 @@ public class UserResponse {
     private AddressResponse address;
     private AuthProvider provider;
     private Set<Role> roles;
+    private boolean active;
     private boolean emailVerified;
     private Instant lastLoginAt;
     private Instant createdAt;

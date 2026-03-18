@@ -40,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse register(RegisterRequest request) {
         String email = normalizeEmail(request.getEmail());
-        if (userService.findByEmail(email).isPresent()) {
+        if (userService.findAnyByEmail(email).isPresent()) {
             throw new BadRequestException("Email is already registered");
         }
 
@@ -62,8 +62,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse login(LoginRequest request) {
         String email = normalizeEmail(request.getEmail());
-        User user = userService.findByEmail(email)
+        User user = userService.findAnyByEmail(email)
                 .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
+
+        ensureAccountAvailable(user);
 
         if (user.getProvider() != AuthProvider.LOCAL || user.getPasswordHash() == null) {
             throw new UnauthorizedException("This account must use Google sign-in");
@@ -80,8 +82,10 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse issueTokenForUser(String email) {
-        User user = userService.findByEmail(normalizeEmail(email))
+        User user = userService.findAnyByEmail(normalizeEmail(email))
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        ensureAccountAvailable(user);
 
         user.setRoles(resolveRoles(user.getEmail()));
         user.setLastLoginAt(Instant.now());
@@ -128,12 +132,54 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public UserResponse deactivateUser(String userId) {
+        User user = userService.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (user.getDeletedAt() != null) {
+            throw new ResourceNotFoundException("User not found");
+        }
+
+        user.setActive(false);
+        return toUserResponse(userService.save(user));
+    }
+
+    @Override
+    public UserResponse activateUser(String userId) {
+        User user = userService.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (user.getDeletedAt() != null) {
+            throw new ResourceNotFoundException("User not found");
+        }
+
+        user.setActive(true);
+        return toUserResponse(userService.save(user));
+    }
+
+    @Override
+    public void deleteUser(String userId) {
+        User user = userService.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (user.getDeletedAt() != null) {
+            throw new ResourceNotFoundException("User not found");
+        }
+
+        user.setActive(false);
+        user.setDeletedAt(Instant.now());
+        userService.delete(user);
+    }
+
+    @Override
     public User processGoogleUser(String email, String firstName, String lastName, String pictureUrl) {
         String normalizedEmail = normalizeEmail(email);
-        User user = userService.findByEmail(normalizedEmail).orElseGet(() -> User.builder()
+        User user = userService.findAnyByEmail(normalizedEmail).orElseGet(() -> User.builder()
                 .email(normalizedEmail)
                 .provider(AuthProvider.GOOGLE)
                 .build());
+
+        ensureAccountAvailable(user);
 
         user.setFirstName(firstName);
         user.setLastName(lastName);
@@ -173,6 +219,7 @@ public class AuthServiceImpl implements AuthService {
                 .address(toAddressResponse(user.getAddress()))
                 .provider(user.getProvider())
                 .roles(user.getRoles())
+                .active(user.isActive())
                 .emailVerified(user.isEmailVerified())
                 .lastLoginAt(user.getLastLoginAt())
                 .createdAt(user.getCreatedAt())
@@ -216,5 +263,14 @@ public class AuthServiceImpl implements AuthService {
 
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private void ensureAccountAvailable(User user) {
+        if (user.getDeletedAt() != null) {
+            throw new UnauthorizedException("Your account has been deleted. Please contact support.");
+        }
+        if (!user.isActive()) {
+            throw new UnauthorizedException("Your account has been deactivated. Please contact support.");
+        }
     }
 }

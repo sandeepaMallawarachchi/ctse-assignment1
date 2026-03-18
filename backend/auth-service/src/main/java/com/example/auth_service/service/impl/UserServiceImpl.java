@@ -22,11 +22,26 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull(email.trim());
+    }
+
+    @Override
+    public Optional<User> findAnyByEmail(String email) {
         return userRepository.findByEmailIgnoreCase(email.trim());
     }
 
     @Override
     public List<User> findAll() {
-        return userRepository.findAll();
+        return userRepository.findAllByDeletedAtIsNull();
+    }
+
+    @Override
+    public Optional<User> findById(String id) {
+        return userRepository.findById(id);
+    }
+
+    @Override
+    public void delete(User user) {
+        userRepository.save(user);
     }
 }

@@ -66,6 +66,7 @@ export interface AdminUserResponse {
   lastName: string;
   phoneNumber?: string | null;
   roles: string[];
+  active: boolean;
   emailVerified: boolean;
   lastLoginAt?: string | null;
   createdAt?: string | null;
@@ -229,4 +230,42 @@ export async function apiGetAdminUsers(token: string): Promise<AdminUserResponse
   });
   const body = await handleResponse<AdminUserResponse[]>(res);
   return body.data ?? [];
+}
+
+export async function apiDeactivateAdminUser(
+  token: string,
+  userId: string
+): Promise<AdminUserResponse> {
+  const res = await fetch(`${AUTH_SERVICE_URL}/admin/users/${userId}/deactivate`, {
+    method: "PUT",
+    headers: authHeaders(token),
+    credentials: "include",
+  });
+  const body = await handleResponse<AdminUserResponse>(res);
+  return body.data;
+}
+
+export async function apiActivateAdminUser(
+  token: string,
+  userId: string
+): Promise<AdminUserResponse> {
+  const res = await fetch(`${AUTH_SERVICE_URL}/admin/users/${userId}/activate`, {
+    method: "PUT",
+    headers: authHeaders(token),
+    credentials: "include",
+  });
+  const body = await handleResponse<AdminUserResponse>(res);
+  return body.data;
+}
+
+export async function apiDeleteAdminUser(
+  token: string,
+  userId: string
+): Promise<void> {
+  const res = await fetch(`${AUTH_SERVICE_URL}/admin/users/${userId}`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+    credentials: "include",
+  });
+  await handleResponse<null>(res);
 }
