@@ -1,32 +1,43 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { useAppDispatch } from "@/store/hooks";
 import { registerUser } from "@/store/authSlice";
 import { fetchCart } from "@/store/cartSlice";
+import { GOOGLE_AUTH_URL } from "@/lib/authApi";
 
 export default function RegisterPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ fullName?: string; email?: string; password?: string; general?: string }>({});
+  const [errors, setErrors] = useState<{
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    password?: string;
+    general?: string;
+  }>({});
   const [loading, setLoading] = useState(false);
 
   function validate() {
     const errs: typeof errors = {};
-    if (!fullName.trim()) errs.fullName = "Full name is required.";
+    if (!firstName.trim()) errs.firstName = "First name is required.";
+    if (!lastName.trim()) errs.lastName = "Last name is required.";
     if (!email.trim()) errs.email = "Email is required.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = "Enter a valid email address.";
     if (!password) errs.password = "Password is required.";
     else if (password.length < 8) errs.password = "Password must be at least 8 characters.";
+    else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/.test(password)) {
+      errs.password = "Password must include uppercase, lowercase, and a number.";
+    }
     return errs;
   }
 
@@ -40,7 +51,7 @@ export default function RegisterPage() {
     setErrors({});
     setLoading(true);
 
-    const result = await dispatch(registerUser({ fullName, email, password }));
+    const result = await dispatch(registerUser({ firstName, lastName, email, password }));
 
     if (registerUser.fulfilled.match(result)) {
       await dispatch(fetchCart());
@@ -77,17 +88,33 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
             <div className="flex flex-col gap-1">
               <input
-                id="fullName"
+                id="firstName"
                 type="text"
-                autoComplete="name"
+                autoComplete="given-name"
                 required
-                placeholder="Name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                placeholder="First Name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
                 className="border-b border-black/20 bg-transparent py-2 text-sm text-[var(--color-text-1)] placeholder:text-[var(--color-text-2)] outline-none focus:border-[var(--color-primary-btn)] transition-colors"
               />
-              {errors.fullName && (
-                <span className="text-xs text-[var(--color-primary-btn)]">{errors.fullName}</span>
+              {errors.firstName && (
+                <span className="text-xs text-[var(--color-primary-btn)]">{errors.firstName}</span>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <input
+                id="lastName"
+                type="text"
+                autoComplete="family-name"
+                required
+                placeholder="Last Name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="border-b border-black/20 bg-transparent py-2 text-sm text-[var(--color-text-1)] placeholder:text-[var(--color-text-2)] outline-none focus:border-[var(--color-primary-btn)] transition-colors"
+              />
+              {errors.lastName && (
+                <span className="text-xs text-[var(--color-primary-btn)]">{errors.lastName}</span>
               )}
             </div>
 
@@ -147,6 +174,9 @@ export default function RegisterPage() {
 
             <button
               type="button"
+              onClick={() => {
+                window.location.href = GOOGLE_AUTH_URL;
+              }}
               className="flex h-[56px] w-full items-center justify-center gap-3 rounded border border-black/20 text-sm text-[var(--color-text-1)] hover:bg-[var(--color-secondary)] transition-colors"
             >
               <svg width="20" height="20" viewBox="0 0 18 18" fill="none" aria-hidden="true">

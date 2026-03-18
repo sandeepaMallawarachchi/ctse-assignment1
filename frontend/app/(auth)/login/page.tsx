@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { useAppDispatch } from "@/store/hooks";
 import { loginUser } from "@/store/authSlice";
 import { fetchCart } from "@/store/cartSlice";
+import { GOOGLE_AUTH_URL } from "@/lib/authApi";
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
@@ -113,8 +113,11 @@ export default function LoginPage() {
                 Forgot Password?
               </Link>
             </div>
-             <button
+            <button
               type="button"
+              onClick={() => {
+                window.location.href = GOOGLE_AUTH_URL;
+              }}
               className="flex h-[56px] w-full items-center justify-center gap-3 rounded border border-black/20 text-sm text-[var(--color-text-1)] hover:bg-[var(--color-secondary)] transition-colors"
             >
               <svg width="20" height="20" viewBox="0 0 18 18" fill="none" aria-hidden="true">
