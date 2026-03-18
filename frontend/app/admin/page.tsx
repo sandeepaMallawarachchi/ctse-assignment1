@@ -1,16 +1,16 @@
 import { ArrowUpRight, BarChart3, Package, ShoppingBag, Users } from "lucide-react";
 
 const stats = [
-  { label: "Total Revenue", value: "$128,430", delta: "+12.4%", icon: BarChart3 },
+  { label: "Total Revenue", value: "LKR 128,430", delta: "+12.4%", icon: BarChart3 },
   { label: "Products", value: "1,248", delta: "+38", icon: Package },
   { label: "Orders", value: "326", delta: "+9.8%", icon: ShoppingBag },
   { label: "Users", value: "4,102", delta: "+184", icon: Users },
 ] as const;
 
 const recentOrders = [
-  { order: "#EX-2301", customer: "Ava Thompson", total: "$320", status: "Packed" },
-  { order: "#EX-2302", customer: "Noah Silva", total: "$180", status: "Pending" },
-  { order: "#EX-2303", customer: "Mia Patel", total: "$760", status: "Shipped" },
+  { order: "#EX-2301", customer: "Ava Thompson", total: "LKR 320", status: "Packed" },
+  { order: "#EX-2302", customer: "Noah Silva", total: "LKR 180", status: "Pending" },
+  { order: "#EX-2303", customer: "Mia Patel", total: "LKR 760", status: "Shipped" },
 ] as const;
 
 export default function AdminDashboardPage() {

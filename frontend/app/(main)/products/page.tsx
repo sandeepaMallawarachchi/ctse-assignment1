@@ -1,177 +1,40 @@
 "use client";
 
 import { SlidersHorizontal, X } from "lucide-react";
-import { useMemo, useState } from "react";
-import ProductCard, { type Product } from "@/components/products/ProductCard";
+import { useEffect, useMemo, useState } from "react";
+import ProductCard from "@/components/products/ProductCard";
 import { Button } from "@/components/ui/button";
-
-type FilterProduct = Product & {
-  category: string;
-  brand: string;
-};
-
-const products: FilterProduct[] = [
-  {
-    id: 101,
-    name: "HAVIT HV-G92 Gamepad",
-    imageUrl: "/products/p1.webp",
-    discountPercent: 40,
-    currentPrice: 120,
-    previousPrice: 160,
-    rating: 5,
-    reviewCount: 88,
-    category: "Gaming",
-    brand: "HAVIT",
-  },
-  {
-    id: 102,
-    name: "AK-900 Wired Keyboard",
-    imageUrl: "/products/p2.webp",
-    discountPercent: 35,
-    currentPrice: 960,
-    previousPrice: 1160,
-    rating: 4,
-    reviewCount: 75,
-    category: "Electronics",
-    brand: "AK",
-  },
-  {
-    id: 103,
-    name: "IPS LCD Gaming Monitor",
-    imageUrl: "/products/p3.webp",
-    discountPercent: 30,
-    currentPrice: 370,
-    previousPrice: 400,
-    rating: 5,
-    reviewCount: 99,
-    category: "Electronics",
-    brand: "IPS",
-  },
-  {
-    id: 104,
-    name: "S-Series Comfort Chair",
-    imageUrl: "/products/p4.webp",
-    discountPercent: 25,
-    currentPrice: 375,
-    previousPrice: 400,
-    rating: 4,
-    reviewCount: 99,
-    category: "Furniture",
-    brand: "S-Series",
-  },
-  {
-    id: 105,
-    name: "Breed Dry Dog Food",
-    imageUrl: "/products/p9.webp",
-    currentPrice: 100,
-    previousPrice: 0,
-    rating: 3,
-    reviewCount: 35,
-    category: "Pet Care",
-    brand: "Breed",
-  },
-  {
-    id: 106,
-    name: "CANON EOS DSLR Camera",
-    imageUrl: "/products/p11.webp",
-    currentPrice: 360,
-    previousPrice: 0,
-    rating: 4,
-    reviewCount: 95,
-    category: "Electronics",
-    brand: "Canon",
-  },
-  {
-    id: 107,
-    name: "ASUS FHD Gaming Laptop",
-    imageUrl: "/products/p12.webp",
-    currentPrice: 700,
-    previousPrice: 0,
-    rating: 5,
-    reviewCount: 325,
-    category: "Electronics",
-    brand: "ASUS",
-  },
-  {
-    id: 108,
-    name: "Curology Product Set",
-    imageUrl: "/products/p10.webp",
-    currentPrice: 500,
-    previousPrice: 0,
-    rating: 4,
-    reviewCount: 145,
-    category: "Beauty",
-    brand: "Curology",
-  },
-  {
-    id: 109,
-    name: "Kids Electric Car",
-    imageUrl: "/products/p13.webp",
-    currentPrice: 960,
-    previousPrice: 0,
-    rating: 5,
-    reviewCount: 65,
-    badgeLabel: "NEW",
-    badgeVariant: "success",
-    category: "Toys",
-    brand: "AMG",
-  },
-  {
-    id: 110,
-    name: "Jr. Zoom Soccer Cleats",
-    imageUrl: "/products/p14.webp",
-    currentPrice: 1160,
-    previousPrice: 0,
-    rating: 5,
-    reviewCount: 35,
-    category: "Sports",
-    brand: "Zoom",
-  },
-  {
-    id: 111,
-    name: "GP11 Shooter USB Gamepad",
-    imageUrl: "/products/p15.webp",
-    currentPrice: 660,
-    previousPrice: 0,
-    rating: 4,
-    reviewCount: 55,
-    category: "Gaming",
-    brand: "GP11",
-  },
-  {
-    id: 112,
-    name: "Quilted Satin Jacket",
-    imageUrl: "/products/p16.webp",
-    currentPrice: 660,
-    previousPrice: 0,
-    rating: 4,
-    reviewCount: 55,
-    category: "Fashion",
-    brand: "Satin",
-  },
-];
-
-const categories = ["Electronics", "Gaming", "Fashion", "Furniture", "Beauty", "Sports", "Toys", "Pet Care"] as const;
-const brands = ["Canon", "ASUS", "HAVIT", "Curology", "AK", "S-Series", "Zoom"] as const;
+import { formatLkr } from "@/lib/currency";
+import {
+  apiGetProducts,
+  mapCatalogProductToCard,
+  type CatalogProduct,
+} from "@/lib/productApi";
 
 function Filters({
+  categories,
+  brands,
   selectedCategories,
   selectedBrands,
   maxPrice,
+  maxPriceLimit,
   onCategoryToggle,
   onBrandToggle,
   onPriceChange,
   onReset,
 }: {
+  categories: string[];
+  brands: string[];
   selectedCategories: string[];
   selectedBrands: string[];
   maxPrice: number;
+  maxPriceLimit: number;
   onCategoryToggle: (category: string) => void;
   onBrandToggle: (brand: string) => void;
   onPriceChange: (price: number) => void;
   onReset: () => void;
 }) {
-  const percent = Math.round((maxPrice / 2000) * 100);
+  const percent = maxPriceLimit > 0 ? Math.round((maxPrice / maxPriceLimit) * 100) : 100;
 
   return (
     <div className="space-y-8">
@@ -212,7 +75,7 @@ function Filters({
       <div>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-semibold text-(--color-text-1)">Price</h3>
-          <span className="text-(--color-primary-btn)">Up to ${maxPrice}</span>
+          <span className="text-(--color-primary-btn)">Up to {formatLkr(maxPrice)}</span>
         </div>
 
         <div className="relative mb-3 h-2 rounded bg-(--color-secondary)">
@@ -221,8 +84,8 @@ function Filters({
 
         <input
           type="range"
-          min={50}
-          max={2000}
+          min={0}
+          max={maxPriceLimit}
           step={10}
           value={maxPrice}
           onChange={(event) => onPriceChange(Number(event.target.value))}
@@ -238,37 +101,88 @@ function Filters({
 }
 
 export default function AllProductsPage() {
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [maxPrice, setMaxPrice] = useState(2000);
+  const [maxPrice, setMaxPrice] = useState(0);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProducts() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await apiGetProducts();
+        if (!active) return;
+
+        setProducts(data.filter((product) => product.active));
+      } catch (err) {
+        if (!active) return;
+        setError(err instanceof Error ? err.message : "Failed to load products.");
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadProducts();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const categories = useMemo(
+    () => Array.from(new Set(products.map((product) => product.category).filter(Boolean))).sort(),
+    [products]
+  );
+
+  const brands = useMemo(
+    () => Array.from(new Set(products.map((product) => product.brand).filter(Boolean))).sort(),
+    [products]
+  );
+
+  const maxPriceLimit = useMemo(() => {
+    const highestPrice = Math.max(...products.map((product) => product.price), 0);
+    return highestPrice > 0 ? Math.ceil(highestPrice / 10) * 10 : 2000;
+  }, [products]);
+
+  useEffect(() => {
+    setMaxPrice((current) => (current > 0 ? Math.min(current, maxPriceLimit) : maxPriceLimit));
+  }, [maxPriceLimit]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      const categoryPass = selectedCategories.length === 0 || selectedCategories.includes(product.category);
+      const categoryPass =
+        selectedCategories.length === 0 || selectedCategories.includes(product.category);
       const brandPass = selectedBrands.length === 0 || selectedBrands.includes(product.brand);
-      const pricePass = product.currentPrice <= maxPrice;
+      const pricePass = product.price <= maxPrice;
 
       return categoryPass && brandPass && pricePass;
     });
-  }, [selectedCategories, selectedBrands, maxPrice]);
+  }, [maxPrice, products, selectedBrands, selectedCategories]);
 
   const handleCategoryToggle = (category: string) => {
     setSelectedCategories((current) =>
-      current.includes(category) ? current.filter((item) => item !== category) : [...current, category],
+      current.includes(category) ? current.filter((item) => item !== category) : [...current, category]
     );
   };
 
   const handleBrandToggle = (brand: string) => {
     setSelectedBrands((current) =>
-      current.includes(brand) ? current.filter((item) => item !== brand) : [...current, brand],
+      current.includes(brand) ? current.filter((item) => item !== brand) : [...current, brand]
     );
   };
 
   const handleReset = () => {
     setSelectedCategories([]);
     setSelectedBrands([]);
-    setMaxPrice(2000);
+    setMaxPrice(maxPriceLimit);
   };
 
   return (
@@ -276,7 +190,9 @@ export default function AllProductsPage() {
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
           <h1 className="font-semibold text-(--color-text-1)">All Products</h1>
-          <p className="mt-2 text-(--color-text-2)">{filteredProducts.length} products found</p>
+          <p className="mt-2 text-(--color-text-2)">
+            {loading ? "Loading products..." : `${filteredProducts.length} products found`}
+          </p>
         </div>
 
         <Button
@@ -292,9 +208,12 @@ export default function AllProductsPage() {
       <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
         <aside className="hidden rounded border border-black/10 bg-white p-5 lg:block">
           <Filters
+            categories={categories}
+            brands={brands}
             selectedCategories={selectedCategories}
             selectedBrands={selectedBrands}
             maxPrice={maxPrice}
+            maxPriceLimit={maxPriceLimit}
             onCategoryToggle={handleCategoryToggle}
             onBrandToggle={handleBrandToggle}
             onPriceChange={setMaxPrice}
@@ -302,11 +221,25 @@ export default function AllProductsPage() {
           />
         </aside>
 
-        <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="rounded border border-black/10 bg-white px-6 py-16 text-center text-sm text-(--color-text-2)">
+            Loading products from the catalog...
+          </div>
+        ) : error ? (
+          <div className="rounded border border-black/10 bg-white px-6 py-16 text-center text-sm text-(--color-text-2)">
+            {error}
+          </div>
+        ) : filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={mapCatalogProductToCard(product)} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded border border-black/10 bg-white px-6 py-16 text-center text-sm text-(--color-text-2)">
+            No products match the selected filters.
+          </div>
+        )}
       </div>
 
       <div
@@ -335,9 +268,12 @@ export default function AllProductsPage() {
         </div>
 
         <Filters
+          categories={categories}
+          brands={brands}
           selectedCategories={selectedCategories}
           selectedBrands={selectedBrands}
           maxPrice={maxPrice}
+          maxPriceLimit={maxPriceLimit}
           onCategoryToggle={handleCategoryToggle}
           onBrandToggle={handleBrandToggle}
           onPriceChange={setMaxPrice}

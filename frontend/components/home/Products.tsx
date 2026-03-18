@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ProductCard, { type Product } from "../products/ProductCard";
 
-const products: Product[] = [
+const fallbackProducts: Product[] = [
   {
     id: 1,
     name: "Breed Dry Dog Food",
@@ -133,7 +133,7 @@ const carouselConfig = {
   itemGap: 24,
 } as const;
 
-export default function Products() {
+export default function Products({ products = fallbackProducts }: { products?: Product[] }) {
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);

@@ -13,7 +13,7 @@ const highlights: Highlight[] = [
   {
     id: 1,
     title: "FREE AND FAST DELIVERY",
-    description: "Free delivery for all orders over $140",
+    description: "Free delivery for all orders over LKR 140",
     icon: Truck,
   },
   {

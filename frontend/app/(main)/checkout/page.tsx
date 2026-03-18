@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { applyCoupon, removeCoupon } from "@/store/cartSlice";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { formatLkr } from "@/lib/currency";
 
 type PaymentMethod = "bank" | "cod";
 
@@ -119,7 +120,7 @@ export default function CheckoutPage() {
                     </span>
                   </div>
                   <span className="text-sm font-medium text-[var(--color-text-1)] whitespace-nowrap">
-                    ${(item.price * item.quantity).toLocaleString()}
+                    {formatLkr(item.price * item.quantity)}
                   </span>
                 </div>
               ))}
@@ -130,13 +131,13 @@ export default function CheckoutPage() {
           <div className="flex flex-col gap-4 border-t border-[var(--color-text-2)]/20 pt-5">
             <div className="flex justify-between">
               <span className="text-sm text-[var(--color-text-1)]">Subtotal:</span>
-              <span className="text-sm font-medium">${totalAmount.toLocaleString()}</span>
+              <span className="text-sm font-medium">{formatLkr(totalAmount)}</span>
             </div>
             {appliedCoupon && (
               <div className="flex justify-between text-green-600">
                 <span className="text-sm">Discount ({appliedCoupon.code}):</span>
                 <span className="text-sm font-medium">
-                  -${appliedCoupon.discountAmount.toLocaleString()}
+                  -{formatLkr(appliedCoupon.discountAmount)}
                 </span>
               </div>
             )}
@@ -146,7 +147,7 @@ export default function CheckoutPage() {
             </div>
             <div className="flex justify-between border-t border-[var(--color-text-2)]/20 pt-4">
               <span className="text-sm text-[var(--color-text-1)]">Total:</span>
-              <span className="text-sm font-semibold">${finalAmount.toLocaleString()}</span>
+              <span className="text-sm font-semibold">{formatLkr(finalAmount)}</span>
             </div>
           </div>
 
