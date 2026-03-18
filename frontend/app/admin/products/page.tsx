@@ -11,7 +11,7 @@ export default function AdminProductsPage() {
         <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-primary-btn)]">Catalog</p>
         <h1 className="mt-3 text-[var(--color-text-1)]">Products</h1>
         <p className="mt-3 max-w-2xl text-[var(--color-text-2)]">
-          Sample product management table for the admin area. This will later bind to the product catalog backend.
+          Review catalog entries, stock levels, and merchandising status from a single product management view.
         </p>
       </div>
 

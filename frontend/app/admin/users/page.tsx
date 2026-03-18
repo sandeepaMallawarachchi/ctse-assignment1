@@ -106,7 +106,7 @@ export default function AdminUsersPage() {
   const summaryLabel = useMemo(() => {
     if (loading) return "Loading users...";
     if (error) return "Could not load users";
-    return `${users.length} user${users.length === 1 ? "" : "s"} from the database`;
+    return `${users.length} user${users.length === 1 ? "" : "s"}`;
   }, [error, loading, users.length]);
 
   const filteredUsers = useMemo(() => {
@@ -234,7 +234,7 @@ export default function AdminUsersPage() {
         <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-primary-btn)]">Accounts</p>
         <h1 className="mt-3 text-[var(--color-text-1)]">Users</h1>
         <p className="mt-3 max-w-2xl text-[var(--color-text-2)]">
-          Live user list from the auth service with real deactivate and delete actions.
+          Review registered accounts, access status, and administrative actions from a centralized user directory.
         </p>
       </div>
 

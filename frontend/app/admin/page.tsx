@@ -22,7 +22,7 @@ export default function AdminDashboardPage() {
           <div className="max-w-2xl">
             <h1 className="text-[var(--color-text-1)]">Admin Dashboard</h1>
             <p className="mt-4 max-w-xl text-sm text-[var(--color-text-2)] md:text-base">
-              Store operations dashboard designed to sit naturally beside the main storefront experience.
+              Operational overview for tracking commercial performance, order flow, and customer activity from one administrative workspace.
             </p>
           </div>
           <div className="rounded-lg bg-[var(--color-secondary-2)] px-5 py-4">
@@ -58,7 +58,7 @@ export default function AdminDashboardPage() {
               <h2 className="mt-3 text-[var(--color-text-1)]">Recent Activity</h2>
             </div>
             <span className="rounded-lg bg-[var(--color-secondary)] px-3 py-1 text-xs text-[var(--color-text-2)]">
-              Sample feed
+              Activity feed
             </span>
           </div>
 
@@ -91,11 +91,11 @@ export default function AdminDashboardPage() {
 
         <div className="rounded-lg border border-black/10 bg-white p-6">
           <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-primary-btn)]">Notes</p>
-          <h2 className="mt-3 text-[var(--color-text-1)]">Integration Queue</h2>
+          <h2 className="mt-3 text-[var(--color-text-1)]">Operational Priorities</h2>
           <ul className="mt-6 space-y-4 text-sm text-[var(--color-text-2)]">
-            <li className="rounded-lg bg-[var(--color-secondary)] px-4 py-4">Connect product KPIs to catalog-service data.</li>
-            <li className="rounded-lg bg-[var(--color-secondary)] px-4 py-4">Replace recent orders list with cart-order-service feed.</li>
-            <li className="rounded-lg bg-[var(--color-secondary)] px-4 py-4">Add admin action forms after backend endpoints are ready.</li>
+            <li className="rounded-lg bg-[var(--color-secondary)] px-4 py-4">Connect product performance metrics to the catalog service.</li>
+            <li className="rounded-lg bg-[var(--color-secondary)] px-4 py-4">Replace the current order preview with the live order management feed.</li>
+            <li className="rounded-lg bg-[var(--color-secondary)] px-4 py-4">Introduce operational forms for administrative workflows as endpoints become available.</li>
           </ul>
         </div>
       </section>

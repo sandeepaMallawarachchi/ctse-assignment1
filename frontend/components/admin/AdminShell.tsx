@@ -85,7 +85,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
         <div className="bg-[var(--color-primary-2)] text-white">
           <div className="mx-auto flex max-w-[1440px] items-center justify-between px-4 py-3 md:px-8">
             <p className="w-full text-center text-sm">
-              Admin workspace for Exclusive store operations
+              Centralized workspace for store operations, account oversight, and catalog administration
             </p>
           </div>
         </div>
