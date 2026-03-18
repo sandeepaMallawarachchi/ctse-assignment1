@@ -37,6 +37,7 @@ interface BackendProductResponse {
   slug: string;
   description: string;
   category: string;
+  subCategory?: string | null;
   price: number;
   inStock: boolean;
   stockQuantity: number;
@@ -57,6 +58,7 @@ export interface CatalogProduct {
   slug: string;
   description: string;
   category: string;
+  subCategory: string | null;
   brand: string;
   price: number;
   inStock: boolean;
@@ -77,6 +79,7 @@ export interface AdminProductRequest {
   slug: string;
   description: string;
   category: string;
+  subCategory?: string;
   price: number;
   stockQuantity: number;
   imageUrl?: string;
@@ -86,6 +89,30 @@ export interface AdminProductRequest {
   colorOptions?: string[];
   sizes?: string[];
   active?: boolean;
+}
+
+interface BackendSubCategoryResponse {
+  name: string;
+  slug: string;
+}
+
+interface BackendCategoryResponse {
+  id: string;
+  name: string;
+  slug: string;
+  subCategories: BackendSubCategoryResponse[];
+}
+
+export interface CatalogSubCategory {
+  name: string;
+  slug: string;
+}
+
+export interface CatalogCategory {
+  id: string;
+  name: string;
+  slug: string;
+  subCategories: CatalogSubCategory[];
 }
 
 function fallbackImage(index = 0) {
@@ -126,6 +153,7 @@ function mapProduct(product: BackendProductResponse, index = 0): CatalogProduct 
     slug: product.slug,
     description: product.description,
     category: product.category,
+    subCategory: product.subCategory ?? null,
     brand: inferBrand(product.name),
     price: Number(product.price ?? 0),
     inStock: Boolean(product.inStock),
@@ -139,6 +167,18 @@ function mapProduct(product: BackendProductResponse, index = 0): CatalogProduct 
     active: Boolean(product.active),
     createdAt: product.createdAt ?? null,
     updatedAt: product.updatedAt ?? null,
+  };
+}
+
+function mapCategory(category: BackendCategoryResponse): CatalogCategory {
+  return {
+    id: category.id,
+    name: category.name,
+    slug: category.slug,
+    subCategories: (category.subCategories ?? []).map((subCategory) => ({
+      name: subCategory.name,
+      slug: subCategory.slug,
+    })),
   };
 }
 
@@ -186,6 +226,41 @@ export async function apiGetProductsByCategory(category: string): Promise<Catalo
   });
   const body = await handleResponse<BackendProductResponse[]>(res);
   return (body.data ?? []).map((product, index) => mapProduct(product, index));
+}
+
+export async function apiGetCategories(): Promise<CatalogCategory[]> {
+  const res = await fetch(`${API_GATEWAY_URL}/api/categories`, {
+    method: "GET",
+    cache: "no-store",
+  });
+  const body = await handleResponse<BackendCategoryResponse[]>(res);
+  return (body.data ?? []).map(mapCategory);
+}
+
+export async function apiCreateCategory(token: string, name: string): Promise<CatalogCategory> {
+  const res = await fetch(`${API_GATEWAY_URL}/api/categories`, {
+    method: "POST",
+    headers: jsonHeaders(token),
+    credentials: "include",
+    body: JSON.stringify({ name }),
+  });
+  const body = await handleResponse<BackendCategoryResponse>(res);
+  return mapCategory(body.data);
+}
+
+export async function apiCreateSubCategory(
+  token: string,
+  categoryId: string,
+  name: string
+): Promise<CatalogCategory> {
+  const res = await fetch(`${API_GATEWAY_URL}/api/categories/${categoryId}/subcategories`, {
+    method: "POST",
+    headers: jsonHeaders(token),
+    credentials: "include",
+    body: JSON.stringify({ name }),
+  });
+  const body = await handleResponse<BackendCategoryResponse>(res);
+  return mapCategory(body.data);
 }
 
 export async function apiCreateProduct(
@@ -279,7 +354,7 @@ export function mapCatalogProductToDetails(product: CatalogProduct): ProductDeta
     inStock: product.inStock,
     rating: product.rating,
     reviewCount: product.reviewCount,
-    breadcrumbs: ["Products", product.category, product.name],
+    breadcrumbs: ["Products", product.category, ...(product.subCategory ? [product.subCategory] : []), product.name],
     gallery: product.gallery,
     colorOptions: product.colorOptions,
     sizes: product.sizes,

@@ -33,6 +33,9 @@ public class ProductUpdateRequest {
     @Size(max = 80, message = "Category must be less than 80 characters")
     private String category;
 
+    @Size(max = 80, message = "Subcategory must be less than 80 characters")
+    private String subCategory;
+
     @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")
     private BigDecimal price;
 

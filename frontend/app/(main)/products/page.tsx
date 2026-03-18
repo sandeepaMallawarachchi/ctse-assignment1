@@ -1,35 +1,44 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { SlidersHorizontal, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import ProductCard from "@/components/products/ProductCard";
 import { Button } from "@/components/ui/button";
 import { formatLkr } from "@/lib/currency";
 import {
+  apiGetCategories,
   apiGetProducts,
   mapCatalogProductToCard,
+  type CatalogCategory,
   type CatalogProduct,
 } from "@/lib/productApi";
 
 function Filters({
   categories,
+  subCategories,
   brands,
   selectedCategories,
+  selectedSubCategories,
   selectedBrands,
   maxPrice,
   maxPriceLimit,
   onCategoryToggle,
+  onSubCategoryToggle,
   onBrandToggle,
   onPriceChange,
   onReset,
 }: {
   categories: string[];
+  subCategories: string[];
   brands: string[];
   selectedCategories: string[];
+  selectedSubCategories: string[];
   selectedBrands: string[];
   maxPrice: number | null;
   maxPriceLimit: number;
   onCategoryToggle: (category: string) => void;
+  onSubCategoryToggle: (subCategory: string) => void;
   onBrandToggle: (brand: string) => void;
   onPriceChange: (price: number) => void;
   onReset: () => void;
@@ -51,6 +60,23 @@ function Filters({
                 className="h-4 w-4 accent-[var(--color-primary-btn)]"
               />
               {category}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="mb-3 font-semibold text-(--color-text-1)">Subcategory</h3>
+        <div className="space-y-2">
+          {subCategories.map((subCategory) => (
+            <label key={subCategory} className="flex cursor-pointer items-center gap-2 text-(--color-text-1)">
+              <input
+                type="checkbox"
+                checked={selectedSubCategories.includes(subCategory)}
+                onChange={() => onSubCategoryToggle(subCategory)}
+                className="h-4 w-4 accent-[var(--color-primary-btn)]"
+              />
+              {subCategory}
             </label>
           ))}
         </div>
@@ -108,8 +134,11 @@ function Filters({
 }
 
 export default function AllProductsPage() {
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [categoriesData, setCategoriesData] = useState<CatalogCategory[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -123,13 +152,14 @@ export default function AllProductsPage() {
       try {
         setLoading(true);
         setError(null);
-        const data = await apiGetProducts();
+        const [productData, categoryData] = await Promise.all([apiGetProducts(), apiGetCategories()]);
         if (!active) return;
 
-        const activeProducts = data.filter((product) => product.active);
+        const activeProducts = productData.filter((product) => product.active);
         const highestPrice = Math.max(...activeProducts.map((product) => Number(product.price) || 0), 0);
 
         setProducts(activeProducts);
+        setCategoriesData(categoryData);
         setMaxPrice(highestPrice > 0 ? highestPrice : null);
       } catch (err) {
         if (!active) return;
@@ -148,10 +178,23 @@ export default function AllProductsPage() {
     };
   }, []);
 
-  const categories = useMemo(
-    () => Array.from(new Set(products.map((product) => product.category).filter(Boolean))).sort(),
-    [products]
-  );
+  const categories = useMemo(() => {
+    if (categoriesData.length > 0) {
+      return categoriesData.map((category) => category.name);
+    }
+    return Array.from(new Set(products.map((product) => product.category).filter(Boolean))).sort();
+  }, [categoriesData, products]);
+
+  const subCategories = useMemo(() => {
+    const source =
+      selectedCategories.length > 0
+        ? categoriesData.filter((category) => selectedCategories.includes(category.name))
+        : categoriesData;
+
+    return Array.from(
+      new Set(source.flatMap((category) => category.subCategories.map((subCategory) => subCategory.name)))
+    ).sort();
+  }, [categoriesData, selectedCategories]);
 
   const brands = useMemo(
     () => Array.from(new Set(products.map((product) => product.brand).filter(Boolean))).sort(),
@@ -170,20 +213,44 @@ export default function AllProductsPage() {
     });
   }, [maxPriceLimit]);
 
+  useEffect(() => {
+    const categoryParam = searchParams.get("category")?.trim();
+    const subCategoryParam = searchParams.get("subCategory")?.trim();
+
+    if (categoryParam) {
+      setSelectedCategories([categoryParam]);
+    }
+
+    if (subCategoryParam) {
+      setSelectedSubCategories([subCategoryParam]);
+    }
+  }, [searchParams]);
+
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const categoryPass =
         selectedCategories.length === 0 || selectedCategories.includes(product.category);
+      const subCategoryPass =
+        selectedSubCategories.length === 0 ||
+        (product.subCategory ? selectedSubCategories.includes(product.subCategory) : false);
       const brandPass = selectedBrands.length === 0 || selectedBrands.includes(product.brand);
       const pricePass = maxPrice === null || product.price <= maxPrice;
 
-      return categoryPass && brandPass && pricePass;
+      return categoryPass && subCategoryPass && brandPass && pricePass;
     });
-  }, [maxPrice, products, selectedBrands, selectedCategories]);
+  }, [maxPrice, products, selectedBrands, selectedCategories, selectedSubCategories]);
 
   const handleCategoryToggle = (category: string) => {
     setSelectedCategories((current) =>
       current.includes(category) ? current.filter((item) => item !== category) : [...current, category]
+    );
+  };
+
+  const handleSubCategoryToggle = (subCategory: string) => {
+    setSelectedSubCategories((current) =>
+      current.includes(subCategory)
+        ? current.filter((item) => item !== subCategory)
+        : [...current, subCategory]
     );
   };
 
@@ -195,8 +262,9 @@ export default function AllProductsPage() {
 
   const handleReset = () => {
     setSelectedCategories([]);
+    setSelectedSubCategories([]);
     setSelectedBrands([]);
-    setMaxPrice(maxPriceLimit);
+    setMaxPrice(maxPriceLimit > 0 ? maxPriceLimit : null);
   };
 
   return (
@@ -223,12 +291,15 @@ export default function AllProductsPage() {
         <aside className="hidden rounded border border-black/10 bg-white p-5 lg:block">
           <Filters
             categories={categories}
+            subCategories={subCategories}
             brands={brands}
             selectedCategories={selectedCategories}
+            selectedSubCategories={selectedSubCategories}
             selectedBrands={selectedBrands}
             maxPrice={maxPrice}
             maxPriceLimit={maxPriceLimit}
             onCategoryToggle={handleCategoryToggle}
+            onSubCategoryToggle={handleSubCategoryToggle}
             onBrandToggle={handleBrandToggle}
             onPriceChange={(price) => setMaxPrice(price)}
             onReset={handleReset}
@@ -283,12 +354,15 @@ export default function AllProductsPage() {
 
         <Filters
           categories={categories}
+          subCategories={subCategories}
           brands={brands}
           selectedCategories={selectedCategories}
+          selectedSubCategories={selectedSubCategories}
           selectedBrands={selectedBrands}
           maxPrice={maxPrice}
           maxPriceLimit={maxPriceLimit}
           onCategoryToggle={handleCategoryToggle}
+          onSubCategoryToggle={handleSubCategoryToggle}
           onBrandToggle={handleBrandToggle}
           onPriceChange={(price) => setMaxPrice(price)}
           onReset={handleReset}

@@ -10,10 +10,12 @@ import {
   apiCreateProduct,
   apiDeleteProduct,
   apiGetAdminProducts,
+  apiGetCategories,
   apiUpdateProduct,
   apiUpdateProductStock,
   apiUploadProductImage,
   type AdminProductRequest,
+  type CatalogCategory,
   type CatalogProduct,
 } from "@/lib/productApi";
 
@@ -21,6 +23,7 @@ type ProductFormState = {
   name: string;
   slug: string;
   category: string;
+  subCategory: string;
   description: string;
   price: string;
   stockQuantity: string;
@@ -37,6 +40,7 @@ const emptyForm: ProductFormState = {
   name: "",
   slug: "",
   category: "",
+  subCategory: "",
   description: "",
   price: "",
   stockQuantity: "0",
@@ -69,6 +73,7 @@ function toFormState(product: CatalogProduct): ProductFormState {
     name: product.name,
     slug: product.slug,
     category: product.category,
+    subCategory: product.subCategory ?? "",
     description: product.description,
     price: String(product.price),
     stockQuantity: String(product.stockQuantity),
@@ -87,6 +92,7 @@ function toRequestPayload(form: ProductFormState): AdminProductRequest {
     name: form.name.trim(),
     slug: form.slug.trim(),
     category: form.category.trim(),
+    subCategory: form.subCategory.trim() || undefined,
     description: form.description.trim(),
     price: Number(form.price),
     stockQuantity: Number(form.stockQuantity),
@@ -115,6 +121,7 @@ export default function AdminProductsPage() {
   const token = useAppSelector((state) => state.auth.token);
   const { showToast } = useToast();
   const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -146,13 +153,17 @@ export default function AdminProductsPage() {
       try {
         setLoading(true);
         setError(null);
-        const data = await apiGetAdminProducts(token);
+        const [data, categoryData] = await Promise.all([
+          apiGetAdminProducts(token),
+          apiGetCategories(),
+        ]);
         if (!active) return;
         setProducts(data.sort((left, right) => {
           const leftTime = left.createdAt ? new Date(left.createdAt).getTime() : 0;
           const rightTime = right.createdAt ? new Date(right.createdAt).getTime() : 0;
           return rightTime - leftTime;
         }));
+        setCategories(categoryData);
       } catch (err) {
         if (!active) return;
         const message = err instanceof Error ? err.message : "Failed to load products.";
@@ -176,9 +187,13 @@ export default function AdminProductsPage() {
     };
   }, [showToast, token]);
 
-  const categories = useMemo(() => {
+  const categoryNames = useMemo(() => {
     return Array.from(new Set(products.map((product) => product.category).filter(Boolean))).sort();
   }, [products]);
+
+  const availableSubCategories = useMemo(() => {
+    return categories.find((category) => category.name === form.category)?.subCategories ?? [];
+  }, [categories, form.category]);
 
   const filteredProducts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -383,6 +398,7 @@ export default function AdminProductsPage() {
         slug: product.slug,
         description: product.description,
         category: product.category,
+        subCategory: product.subCategory ?? undefined,
         price: product.price,
         stockQuantity: product.stockQuantity,
         imageUrl: product.imageUrl,
@@ -457,7 +473,7 @@ export default function AdminProductsPage() {
             className="h-11 rounded-lg border border-black/10 bg-white px-4 text-sm text-[var(--color-text-1)] outline-none transition focus:border-[var(--color-primary-btn)]"
           >
             <option value="ALL">All Categories</option>
-            {categories.map((category) => (
+            {categoryNames.map((category) => (
               <option key={category} value={category}>
                 {category}
               </option>
@@ -601,13 +617,39 @@ export default function AdminProductsPage() {
               </label>
               <label className="space-y-2">
                 <span className="text-sm font-medium text-[var(--color-text-1)]">Category *</span>
-                <input
-                  type="text"
+                <select
                   value={form.category}
-                  onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))}
-                  placeholder="Category"
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      category: event.target.value,
+                      subCategory: "",
+                    }))
+                  }
                   className="h-11 w-full rounded-lg border border-black/10 px-4 text-sm outline-none transition focus:border-[var(--color-primary-btn)]"
-                />
+                >
+                  <option value="">Select category</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="space-y-2">
+                <span className="text-sm font-medium text-[var(--color-text-1)]">Subcategory</span>
+                <select
+                  value={form.subCategory}
+                  onChange={(event) => setForm((current) => ({ ...current, subCategory: event.target.value }))}
+                  className="h-11 w-full rounded-lg border border-black/10 px-4 text-sm outline-none transition focus:border-[var(--color-primary-btn)]"
+                >
+                  <option value="">Select subcategory</option>
+                  {availableSubCategories.map((subCategory) => (
+                    <option key={subCategory.slug} value={subCategory.name}>
+                      {subCategory.name}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label className="space-y-2">
                 <span className="text-sm font-medium text-[var(--color-text-1)]">Price *</span>

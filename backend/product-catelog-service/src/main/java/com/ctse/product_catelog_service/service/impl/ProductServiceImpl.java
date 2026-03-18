@@ -26,6 +26,7 @@ public class ProductServiceImpl implements ProductService {
                 .slug(request.getSlug().trim())
                 .description(request.getDescription().trim())
                 .category(request.getCategory().trim())
+                .subCategory(request.getSubCategory() == null ? null : request.getSubCategory().trim())
                 .price(request.getPrice())
                 .stockQuantity(request.getStockQuantity())
                 .imageUrl(request.getImageUrl())
@@ -48,6 +49,7 @@ public class ProductServiceImpl implements ProductService {
         existing.setSlug(request.getSlug().trim());
         existing.setDescription(request.getDescription().trim());
         existing.setCategory(request.getCategory().trim());
+        existing.setSubCategory(request.getSubCategory() == null ? null : request.getSubCategory().trim());
         existing.setPrice(request.getPrice() == null ? existing.getPrice() : request.getPrice());
         existing.setStockQuantity(request.getStockQuantity() == null ? existing.getStockQuantity() : request.getStockQuantity());
         existing.setImageUrl(request.getImageUrl() == null ? existing.getImageUrl() : request.getImageUrl());
@@ -137,6 +139,7 @@ public class ProductServiceImpl implements ProductService {
                 .slug(product.getSlug())
                 .description(product.getDescription())
                 .category(product.getCategory())
+                .subCategory(product.getSubCategory())
                 .price(product.getPrice())
                 .inStock(product.getStockQuantity() != null && product.getStockQuantity() > 0)
                 .stockQuantity(product.getStockQuantity())
