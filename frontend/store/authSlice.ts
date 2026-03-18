@@ -93,6 +93,18 @@ const authSlice = createSlice({
         }
       }
     },
+    updateAuthUser(state, action: PayloadAction<{ fullName: string }>) {
+      if (!state.user) return;
+
+      state.user = {
+        ...state.user,
+        fullName: action.payload.fullName,
+      };
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("authUser", JSON.stringify(state.user));
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -120,5 +132,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setAuth, setToken, clearToken, loadTokenFromStorage } = authSlice.actions;
+export const { setAuth, setToken, clearToken, loadTokenFromStorage, updateAuthUser } = authSlice.actions;
 export default authSlice.reducer;
