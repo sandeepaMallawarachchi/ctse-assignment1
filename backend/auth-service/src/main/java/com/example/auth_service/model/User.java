@@ -37,6 +37,10 @@ public class User {
 
     private String pictureUrl;
 
+    private String phoneNumber;
+
+    private Address address;
+
     private AuthProvider provider;
 
     @Builder.Default

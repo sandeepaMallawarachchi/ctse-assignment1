@@ -4,6 +4,8 @@ import com.example.auth_service.dto.ApiResponse;
 import com.example.auth_service.dto.AuthResponse;
 import com.example.auth_service.dto.LoginRequest;
 import com.example.auth_service.dto.RegisterRequest;
+import com.example.auth_service.dto.UpdateAddressRequest;
+import com.example.auth_service.dto.UpdateProfileRequest;
 import com.example.auth_service.dto.UserResponse;
 import com.example.auth_service.exception.UnauthorizedException;
 import com.example.auth_service.security.AuthUserPrincipal;
@@ -22,6 +24,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -67,6 +70,24 @@ public class AuthController {
                                                         HttpServletRequest httpRequest) {
         UserResponse user = authService.getCurrentUser(resolveAuthenticatedEmail(authentication));
         return ResponseEntity.ok(body(HttpStatus.OK, "Current user fetched successfully", httpRequest.getRequestURI(), user));
+    }
+
+    @PutMapping("/profile")
+    @Operation(summary = "Update current authenticated user's profile details")
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(Authentication authentication,
+                                                                   @Valid @RequestBody UpdateProfileRequest request,
+                                                                   HttpServletRequest httpRequest) {
+        UserResponse user = authService.updateProfile(resolveAuthenticatedEmail(authentication), request);
+        return ResponseEntity.ok(body(HttpStatus.OK, "Profile updated successfully", httpRequest.getRequestURI(), user));
+    }
+
+    @PutMapping("/address")
+    @Operation(summary = "Update current authenticated user's saved address")
+    public ResponseEntity<ApiResponse<UserResponse>> updateAddress(Authentication authentication,
+                                                                   @Valid @RequestBody UpdateAddressRequest request,
+                                                                   HttpServletRequest httpRequest) {
+        UserResponse user = authService.updateAddress(resolveAuthenticatedEmail(authentication), request);
+        return ResponseEntity.ok(body(HttpStatus.OK, "Address updated successfully", httpRequest.getRequestURI(), user));
     }
 
     @GetMapping("/token")

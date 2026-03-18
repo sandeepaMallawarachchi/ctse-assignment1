@@ -16,6 +16,8 @@ public class UserResponse {
     private String firstName;
     private String lastName;
     private String pictureUrl;
+    private String phoneNumber;
+    private AddressResponse address;
     private AuthProvider provider;
     private Set<Role> roles;
     private boolean emailVerified;
