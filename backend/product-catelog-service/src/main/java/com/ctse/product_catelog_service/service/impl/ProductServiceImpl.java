@@ -42,7 +42,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse updateProduct(String productId, ProductUpdateRequest request) {
-        Product existing = getActiveProductOrThrow(productId);
+        Product existing = getProductOrThrow(productId);
 
         existing.setName(request.getName().trim());
         existing.setSlug(request.getSlug().trim());
@@ -63,9 +63,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteProduct(String productId) {
-        Product product = getActiveProductOrThrow(productId);
-        product.setActive(false);
-        productRepository.save(product);
+        Product product = getProductOrThrow(productId);
+        productRepository.delete(product);
     }
 
     @Override
@@ -90,6 +89,14 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public List<ProductResponse> getAllProductsForAdmin() {
+        return productRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
     public List<ProductResponse> getProductsByCategory(String category) {
         return productRepository.findByCategoryIgnoreCaseAndActiveTrue(category.trim())
                 .stream()
@@ -103,14 +110,18 @@ public class ProductServiceImpl implements ProductService {
             throw new BadRequestException("Stock quantity cannot be negative");
         }
 
-        Product product = getActiveProductOrThrow(productId);
+        Product product = getProductOrThrow(productId);
         product.setStockQuantity(stockQuantity);
         return toResponse(productRepository.save(product));
     }
 
-    private Product getActiveProductOrThrow(String productId) {
-        Product product = productRepository.findById(productId)
+    private Product getProductOrThrow(String productId) {
+        return productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
+    }
+
+    private Product getActiveProductOrThrow(String productId) {
+        Product product = getProductOrThrow(productId);
 
         if (!product.isActive()) {
             throw new ResourceNotFoundException("Product is inactive: " + productId);

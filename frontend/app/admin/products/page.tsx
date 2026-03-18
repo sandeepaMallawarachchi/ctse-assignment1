@@ -9,7 +9,7 @@ import { useAppSelector } from "@/store/hooks";
 import {
   apiCreateProduct,
   apiDeleteProduct,
-  apiGetProducts,
+  apiGetAdminProducts,
   apiUpdateProduct,
   apiUpdateProductStock,
   apiUploadProductImage,
@@ -134,10 +134,19 @@ export default function AdminProductsPage() {
     let active = true;
 
     async function loadProducts() {
+      if (!token) {
+        if (active) {
+          setProducts([]);
+          setLoading(false);
+          setError("Missing authentication token.");
+        }
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
-        const data = await apiGetProducts();
+        const data = await apiGetAdminProducts(token);
         if (!active) return;
         setProducts(data.sort((left, right) => {
           const leftTime = left.createdAt ? new Date(left.createdAt).getTime() : 0;
@@ -165,7 +174,7 @@ export default function AdminProductsPage() {
     return () => {
       active = false;
     };
-  }, [showToast]);
+  }, [showToast, token]);
 
   const categories = useMemo(() => {
     return Array.from(new Set(products.map((product) => product.category).filter(Boolean))).sort();
@@ -573,7 +582,7 @@ export default function AdminProductsPage() {
                     setForm((current) => ({
                       ...current,
                       name: event.target.value,
-                      slug: editingProductId ? current.slug : toSlug(event.target.value),
+                      slug: toSlug(event.target.value),
                     }))
                   }
                   placeholder="Product name"

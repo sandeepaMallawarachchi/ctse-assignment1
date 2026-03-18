@@ -159,6 +159,17 @@ export async function apiGetProducts(): Promise<CatalogProduct[]> {
   return (body.data ?? []).map((product, index) => mapProduct(product, index));
 }
 
+export async function apiGetAdminProducts(token: string): Promise<CatalogProduct[]> {
+  const res = await fetch(`${PRODUCT_SERVICE_URL}/admin/all`, {
+    method: "GET",
+    headers: jsonHeaders(token),
+    credentials: "include",
+    cache: "no-store",
+  });
+  const body = await handleResponse<BackendProductResponse[]>(res);
+  return (body.data ?? []).map((product, index) => mapProduct(product, index));
+}
+
 export async function apiGetProductBySlug(slug: string): Promise<CatalogProduct> {
   const res = await fetch(`${PRODUCT_SERVICE_URL}/slug/${encodeURIComponent(slug)}`, {
     method: "GET",

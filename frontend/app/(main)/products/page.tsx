@@ -27,14 +27,15 @@ function Filters({
   brands: string[];
   selectedCategories: string[];
   selectedBrands: string[];
-  maxPrice: number;
+  maxPrice: number | null;
   maxPriceLimit: number;
   onCategoryToggle: (category: string) => void;
   onBrandToggle: (brand: string) => void;
   onPriceChange: (price: number) => void;
   onReset: () => void;
 }) {
-  const percent = maxPriceLimit > 0 ? Math.round((maxPrice / maxPriceLimit) * 100) : 100;
+  const hasPriceRange = maxPriceLimit > 0 && maxPrice !== null;
+  const percent = hasPriceRange ? Math.round((maxPrice / maxPriceLimit) * 100) : 100;
 
   return (
     <div className="space-y-8">
@@ -75,20 +76,26 @@ function Filters({
       <div>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-semibold text-(--color-text-1)">Price</h3>
-          <span className="text-(--color-primary-btn)">Up to {formatLkr(maxPrice)}</span>
+          <span className="text-(--color-primary-btn)">
+            {hasPriceRange ? `Up to ${formatLkr(maxPrice)}` : "All prices"}
+          </span>
         </div>
 
         <div className="relative mb-3 h-2 rounded bg-(--color-secondary)">
-          <div className="absolute left-0 top-0 h-2 rounded bg-(--color-primary-btn)" style={{ width: `${percent}%` }} />
+          <div
+            className="absolute left-0 top-0 h-2 rounded bg-(--color-primary-btn)"
+            style={{ width: `${hasPriceRange ? percent : 100}%` }}
+          />
         </div>
 
         <input
           type="range"
           min={0}
-          max={maxPriceLimit}
+          max={Math.max(maxPriceLimit, 1)}
           step={10}
-          value={maxPrice}
+          value={hasPriceRange ? maxPrice : Math.max(maxPriceLimit, 1)}
           onChange={(event) => onPriceChange(Number(event.target.value))}
+          disabled={!hasPriceRange}
           className="w-full accent-[var(--color-primary-btn)]"
         />
       </div>
@@ -104,7 +111,7 @@ export default function AllProductsPage() {
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [maxPrice, setMaxPrice] = useState(0);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -119,7 +126,11 @@ export default function AllProductsPage() {
         const data = await apiGetProducts();
         if (!active) return;
 
-        setProducts(data.filter((product) => product.active));
+        const activeProducts = data.filter((product) => product.active);
+        const highestPrice = Math.max(...activeProducts.map((product) => Number(product.price) || 0), 0);
+
+        setProducts(activeProducts);
+        setMaxPrice(highestPrice > 0 ? highestPrice : null);
       } catch (err) {
         if (!active) return;
         setError(err instanceof Error ? err.message : "Failed to load products.");
@@ -149,11 +160,14 @@ export default function AllProductsPage() {
 
   const maxPriceLimit = useMemo(() => {
     const highestPrice = Math.max(...products.map((product) => product.price), 0);
-    return highestPrice > 0 ? Math.ceil(highestPrice / 10) * 10 : 2000;
+    return highestPrice > 0 ? highestPrice : 0;
   }, [products]);
 
   useEffect(() => {
-    setMaxPrice((current) => (current > 0 ? Math.min(current, maxPriceLimit) : maxPriceLimit));
+    setMaxPrice((current) => {
+      if (current === null) return current;
+      return Math.min(current, maxPriceLimit);
+    });
   }, [maxPriceLimit]);
 
   const filteredProducts = useMemo(() => {
@@ -161,7 +175,7 @@ export default function AllProductsPage() {
       const categoryPass =
         selectedCategories.length === 0 || selectedCategories.includes(product.category);
       const brandPass = selectedBrands.length === 0 || selectedBrands.includes(product.brand);
-      const pricePass = product.price <= maxPrice;
+      const pricePass = maxPrice === null || product.price <= maxPrice;
 
       return categoryPass && brandPass && pricePass;
     });
@@ -216,7 +230,7 @@ export default function AllProductsPage() {
             maxPriceLimit={maxPriceLimit}
             onCategoryToggle={handleCategoryToggle}
             onBrandToggle={handleBrandToggle}
-            onPriceChange={setMaxPrice}
+            onPriceChange={(price) => setMaxPrice(price)}
             onReset={handleReset}
           />
         </aside>
@@ -276,7 +290,7 @@ export default function AllProductsPage() {
           maxPriceLimit={maxPriceLimit}
           onCategoryToggle={handleCategoryToggle}
           onBrandToggle={handleBrandToggle}
-          onPriceChange={setMaxPrice}
+          onPriceChange={(price) => setMaxPrice(price)}
           onReset={handleReset}
         />
       </aside>
