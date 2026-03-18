@@ -147,6 +147,15 @@ export async function apiIssueToken(): Promise<AuthResponse> {
   return mapAuthResponse(body.data);
 }
 
+export async function apiLogout(): Promise<void> {
+  const res = await fetch(`${AUTH_SERVICE_URL}/logout`, {
+    method: "POST",
+    headers: authHeaders(),
+    credentials: "include",
+  });
+  await handleResponse<null>(res);
+}
+
 export async function apiGetCurrentUser(token: string): Promise<AuthResponse> {
   const res = await fetch(`${AUTH_SERVICE_URL}/me`, {
     method: "GET",

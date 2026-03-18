@@ -8,10 +8,13 @@ import { useAppDispatch } from "@/store/hooks";
 import { loginUser } from "@/store/authSlice";
 import { fetchCart } from "@/store/cartSlice";
 import { GOOGLE_AUTH_URL } from "@/lib/authApi";
+import { hasAdminRole } from "@/lib/authRoles";
+import { useToast } from "@/components/ui/toast";
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const { showToast } = useToast();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,9 +31,20 @@ export default function LoginPage() {
 
     if (loginUser.fulfilled.match(result)) {
       await dispatch(fetchCart());
-      router.push("/");
+      showToast({
+        title: "Login successful",
+        description: `Welcome back, ${result.payload.firstName}.`,
+        variant: "success",
+      });
+      router.push(hasAdminRole(result.payload.roles) ? "/admin" : "/");
     } else {
-      setError((result.payload as string) || "Login failed. Please try again.");
+      const message = (result.payload as string) || "Login failed. Please try again.";
+      setError(message);
+      showToast({
+        title: "Login failed",
+        description: message,
+        variant: "error",
+      });
     }
 
     setLoading(false);
@@ -65,7 +79,7 @@ export default function LoginPage() {
                 type="email"
                 autoComplete="email"
                 required
-                placeholder="Email or Phone Number"
+                placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="border-b border-black/20 bg-transparent py-2 text-sm text-[var(--color-text-1)] placeholder:text-[var(--color-text-2)] outline-none focus:border-[var(--color-primary-btn)] transition-colors"
