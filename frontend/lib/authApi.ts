@@ -5,6 +5,7 @@ const API_GATEWAY_URL = (
 ).replace(/\/$/, "");
 
 const AUTH_SERVICE_URL = `${API_GATEWAY_URL}/api/auth`;
+export const GOOGLE_AUTH_URL = `${AUTH_SERVICE_URL}/google`;
 
 export interface AuthResponse {
   accessToken: string;
@@ -96,6 +97,15 @@ export async function apiLogin(req: LoginRequest): Promise<AuthResponse> {
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify(req),
+  });
+  const body = await handleResponse<BackendAuthResponse>(res);
+  return mapAuthResponse(body.data);
+}
+
+export async function apiIssueToken(): Promise<AuthResponse> {
+  const res = await fetch(`${AUTH_SERVICE_URL}/token`, {
+    method: "GET",
+    credentials: "include",
   });
   const body = await handleResponse<BackendAuthResponse>(res);
   return mapAuthResponse(body.data);

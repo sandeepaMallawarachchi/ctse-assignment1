@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import type { AuthState } from "./types";
-import { apiLogin, apiRegister } from "@/lib/authApi";
+import { apiIssueToken, apiLogin, apiRegister } from "@/lib/authApi";
 import type { LoginRequest, RegisterRequest } from "@/lib/authApi";
 
 const initialState: AuthState = {
@@ -31,6 +31,17 @@ export const registerUser = createAsyncThunk(
   }
 );
 
+export const fetchAuthFromCookie = createAsyncThunk(
+  "auth/fetchAuthFromCookie",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await apiIssueToken();
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : "Google login failed");
+    }
+  }
+);
+
 function persistAuth(token: string, user: { userId: string; email: string; fullName: string; roles: string[] }) {
   if (typeof window !== "undefined") {
     localStorage.setItem("token", token);
@@ -42,6 +53,13 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+    setAuth(state, action: PayloadAction<{ accessToken: string; userId: string; email: string; fullName: string; roles: string[] }>) {
+      const { accessToken, userId, email, fullName, roles } = action.payload;
+      state.token = accessToken;
+      state.isAuthenticated = true;
+      state.user = { userId, email, fullName, roles };
+      persistAuth(accessToken, { userId, email, fullName, roles });
+    },
     setToken(state, action: PayloadAction<string>) {
       state.token = action.payload;
       state.isAuthenticated = true;
@@ -91,9 +109,16 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = { userId, email, fullName, roles };
         persistAuth(accessToken, { userId, email, fullName, roles });
+      })
+      .addCase(fetchAuthFromCookie.fulfilled, (state, action) => {
+        const { accessToken, userId, email, fullName, roles } = action.payload;
+        state.token = accessToken;
+        state.isAuthenticated = true;
+        state.user = { userId, email, fullName, roles };
+        persistAuth(accessToken, { userId, email, fullName, roles });
       });
   },
 });
 
-export const { setToken, clearToken, loadTokenFromStorage } = authSlice.actions;
+export const { setAuth, setToken, clearToken, loadTokenFromStorage } = authSlice.actions;
 export default authSlice.reducer;
