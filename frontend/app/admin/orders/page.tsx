@@ -11,7 +11,7 @@ export default function AdminOrdersPage() {
         <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-primary-btn)]">Fulfillment</p>
         <h1 className="mt-3 text-[var(--color-text-1)]">Orders</h1>
         <p className="mt-3 max-w-2xl text-[var(--color-text-2)]">
-          Sample order tracking cards for the admin workspace. These are placeholders until the order service is connected.
+          Monitor customer orders, fulfillment progress, and order value from a dedicated operations view.
         </p>
       </div>
 

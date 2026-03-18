@@ -23,6 +23,12 @@ public interface AuthService {
 
     UserResponse updateAddress(String email, UpdateAddressRequest request);
 
+    UserResponse deactivateUser(String userId);
+
+    UserResponse activateUser(String userId);
+
+    void deleteUser(String userId);
+
     User processGoogleUser(String email, String firstName, String lastName, String pictureUrl);
 
     List<UserResponse> getAllUsers();

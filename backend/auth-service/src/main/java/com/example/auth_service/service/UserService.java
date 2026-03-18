@@ -10,5 +10,11 @@ public interface UserService {
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findAnyByEmail(String email);
+
     List<User> findAll();
+
+    Optional<User> findById(String id);
+
+    void delete(User user);
 }

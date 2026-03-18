@@ -54,6 +54,8 @@ public class User {
 
     private Instant lastLoginAt;
 
+    private Instant deletedAt;
+
     @CreatedDate
     private Instant createdAt;
 
