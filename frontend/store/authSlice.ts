@@ -9,6 +9,7 @@ import {
   apiUpdateAddress,
   apiUpdateProfile,
 } from "@/lib/authApi";
+import { isJwtExpired } from "@/lib/jwt";
 import type {
   AuthResponse,
   LoginRequest,
@@ -172,16 +173,19 @@ const authSlice = createSlice({
       if (typeof window !== "undefined") {
         const token = localStorage.getItem("token");
         const userStr = localStorage.getItem("authUser");
-        if (token) {
+        if (token && !isJwtExpired(token)) {
           state.token = token;
           state.isAuthenticated = true;
         }
-        if (userStr) {
+        if (userStr && token && !isJwtExpired(token)) {
           try {
             state.user = JSON.parse(userStr);
           } catch {
             // ignore malformed data
           }
+        } else if (token && isJwtExpired(token)) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("authUser");
         }
       }
       state.hydrated = true;
