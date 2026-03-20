@@ -352,6 +352,8 @@ export function mapCatalogProductToCard(product: CatalogProduct): Product {
 }
 
 export function mapCatalogProductToDetails(product: CatalogProduct): ProductDetails {
+  const detailGallery = [product.imageUrl, ...product.gallery.filter((image) => image !== product.imageUrl)];
+
   return {
     id: product.id,
     slug: product.slug,
@@ -362,7 +364,7 @@ export function mapCatalogProductToDetails(product: CatalogProduct): ProductDeta
     rating: product.rating,
     reviewCount: product.reviewCount,
     breadcrumbs: ["Products", product.category, ...(product.subCategory ? [product.subCategory] : []), product.name],
-    gallery: product.gallery,
+    gallery: detailGallery,
     colorOptions: product.colorOptions,
     sizes: product.sizes,
   };

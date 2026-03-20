@@ -3,7 +3,7 @@
 import { Heart, Minus, Plus, RefreshCcw, Star, Truck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/components/products/ProductCard";
 import { formatLkr } from "@/lib/currency";
@@ -62,10 +62,18 @@ function Rating({
 }
 
 export default function ProductDetailsView({ product, relatedProducts }: ProductDetailsViewProps) {
-  const [selectedImage, setSelectedImage] = useState(product.gallery[0]);
+  const galleryImages = useMemo(() => {
+    const normalized = product.gallery.filter((image) => Boolean(image?.trim()));
+    return normalized.length > 0 ? normalized : ["/products/p1.webp"];
+  }, [product.gallery]);
+  const [selectedImage, setSelectedImage] = useState(galleryImages[0]);
   const [selectedSize, setSelectedSize] = useState(product.sizes[2] ?? product.sizes[0]);
   const [quantity, setQuantity] = useState(1);
   const isRemoteSelectedImage = /^https?:\/\//i.test(selectedImage);
+
+  useEffect(() => {
+    setSelectedImage(galleryImages[0]);
+  }, [galleryImages]);
 
   const priceLabel = useMemo(
     () => formatLkr(product.price, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
@@ -76,7 +84,7 @@ export default function ProductDetailsView({ product, relatedProducts }: Product
     <section className="mx-auto max-w-[1240px] px-4 py-20 md:px-8">
       <div className="grid gap-8 lg:grid-cols-[160px_1fr_420px] lg:gap-6">
         <div className="order-2 grid grid-cols-4 gap-3 sm:order-1 sm:grid-cols-4 lg:grid-cols-1">
-          {product.gallery.map((image, index) => (
+          {galleryImages.map((image, index) => (
             <button
               key={`${image}-${index}`}
               type="button"
@@ -97,7 +105,7 @@ export default function ProductDetailsView({ product, relatedProducts }: Product
           ))}
         </div>
 
-        <div className="order-1 relative h-[400px] overflow-hidden rounded bg-(--color-secondary) sm:h-full lg:order-2">
+        <div className="order-1 relative h-[400px] overflow-hidden rounded bg-(--color-secondary) lg:order-2 lg:h-[520px]">
           <Image src={selectedImage} alt={product.name} fill unoptimized={isRemoteSelectedImage} className="object-contain p-5" />
         </div>
 

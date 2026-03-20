@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useToast } from "@/components/ui/toast";
 import { formatLkr } from "@/lib/currency";
@@ -255,6 +255,14 @@ export default function AdminProductsPage() {
     setForm((current) => ({
       ...current,
       colorOptions: [],
+    }));
+  }
+
+  function handleRemoveGalleryImage(indexToRemove: number) {
+    setGalleryFiles((current) => current.map((file, index) => (index === indexToRemove ? null : file)));
+    setForm((current) => ({
+      ...current,
+      gallery: current.gallery.map((image, index) => (index === indexToRemove ? "" : image)),
     }));
   }
 
@@ -764,16 +772,26 @@ export default function AdminProductsPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 {form.gallery.map((imageUrl, index) => (
                   <div key={index} className="space-y-2">
-                    <div className="flex h-[120px] items-center justify-center overflow-hidden rounded-lg border border-black/10 bg-white">
+                    <div className="relative flex h-[120px] items-center justify-center overflow-hidden rounded-lg border border-black/10 bg-white">
                       {imageUrl ? (
-                        <Image
-                          src={imageUrl}
-                          alt={`Gallery preview ${index + 1}`}
-                          width={120}
-                          height={120}
-                          unoptimized
-                          className="h-full w-full object-contain"
-                        />
+                        <>
+                          <Image
+                            src={imageUrl}
+                            alt={`Gallery preview ${index + 1}`}
+                            width={120}
+                            height={120}
+                            unoptimized
+                            className="h-full w-full object-contain"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveGalleryImage(index)}
+                            className="absolute right-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-[var(--color-text-1)] shadow-sm transition hover:bg-[var(--color-primary-btn)] hover:text-white"
+                            aria-label={`Remove gallery image ${index + 1}`}
+                          >
+                            <X size={14} />
+                          </button>
+                        </>
                       ) : (
                         <span className="px-3 text-center text-xs text-[var(--color-text-2)]">No image selected</span>
                       )}
