@@ -13,12 +13,12 @@ export default function PaymentCancelPage() {
         Your PayHere payment was cancelled before completion. You can return to checkout and try again when ready.
       </p>
       <div className="flex gap-3">
-        <Button asChild variant="primary" size="lg">
-          <Link href="/checkout">Back to Checkout</Link>
-        </Button>
-        <Button asChild variant="secondary" size="lg">
-          <Link href="/cart">View Cart</Link>
-        </Button>
+        <Link href="/checkout">
+          <Button variant="primary" size="lg">Back to Checkout</Button>
+        </Link>
+        <Link href="/cart">
+          <Button variant="secondary" size="lg">View Cart</Button>
+        </Link>
       </div>
     </section>
   );

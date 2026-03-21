@@ -77,12 +77,12 @@ export default function PaymentSuccessPage() {
       )}
 
       <div className="flex gap-3">
-        <Button asChild variant="primary" size="lg">
-          <Link href="/products">Continue Shopping</Link>
-        </Button>
-        <Button asChild variant="secondary" size="lg">
-          <Link href="/profile">View Profile</Link>
-        </Button>
+        <Link href="/products">
+          <Button variant="primary" size="lg">Continue Shopping</Button>
+        </Link>
+        <Link href="/profile">
+          <Button variant="secondary" size="lg">View Profile</Button>
+        </Link>
       </div>
     </section>
   );
