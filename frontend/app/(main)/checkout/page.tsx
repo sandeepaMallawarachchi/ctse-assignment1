@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState, FormEvent } from "react";
+import { useMemo, useState, FormEvent } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { applyCoupon, removeCoupon, clearCartThunk } from "@/store/cartSlice";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ export default function CheckoutPage() {
   const dispatch = useAppDispatch();
 
   const token = useAppSelector((state) => state.auth.token);
+  const user = useAppSelector((state) => state.auth.user);
   const items = useAppSelector((state) => state.cart.items);
   const totalAmount = useAppSelector((state) => state.cart.totalAmount);
   const appliedCoupon = useAppSelector((state) => state.cart.appliedCoupon);
@@ -46,19 +47,50 @@ export default function CheckoutPage() {
     emailAddress: "",
   });
 
+  const prefilledForm = useMemo(() => {
+    if (!user) {
+      return {
+        firstName: "",
+        streetAddress: "",
+        apartment: "",
+        townCity: "",
+        state: "",
+        postalCode: "",
+        country: "Sri Lanka",
+        phoneNumber: "",
+        emailAddress: "",
+      };
+    }
+
+    const address = user.address;
+    const defaultFullName = address?.fullName?.trim() || user.fullName?.trim() || `${user.firstName} ${user.lastName}`.trim();
+
+    return {
+      firstName: defaultFullName,
+      streetAddress: address?.addressLine1 || "",
+      apartment: address?.addressLine2 || "",
+      townCity: address?.city || "",
+      state: address?.state || "",
+      postalCode: address?.postalCode || "",
+      country: address?.country || "Sri Lanka",
+      phoneNumber: address?.phoneNumber || user.phoneNumber || "",
+      emailAddress: user.email || "",
+    };
+  }, [user]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const buildShippingAddress = (): ShippingAddress => ({
-    fullName: form.firstName,
-    addressLine1: form.streetAddress,
-    addressLine2: form.apartment || undefined,
-    city: form.townCity,
-    state: form.state,
-    postalCode: form.postalCode,
-    country: form.country,
-    phone: form.phoneNumber,
+    fullName: form.firstName || prefilledForm.firstName,
+    addressLine1: form.streetAddress || prefilledForm.streetAddress,
+    addressLine2: form.apartment || prefilledForm.apartment || undefined,
+    city: form.townCity || prefilledForm.townCity,
+    state: form.state || prefilledForm.state,
+    postalCode: form.postalCode || prefilledForm.postalCode,
+    country: form.country || prefilledForm.country,
+    phone: form.phoneNumber || prefilledForm.phoneNumber,
   });
 
   const handleSubmit = async (e: FormEvent) => {
@@ -134,26 +166,26 @@ export default function CheckoutPage() {
           </h2>
 
           <div className="flex flex-col gap-6">
-            <Field label="First Name" name="firstName" required value={form.firstName} onChange={handleChange} />
+            <Field label="First Name" name="firstName" required value={form.firstName || prefilledForm.firstName} onChange={handleChange} />
             <Field label="Company Name" name="companyName" value={form.companyName} onChange={handleChange} />
-            <Field label="Street Address" name="streetAddress" required value={form.streetAddress} onChange={handleChange} />
+            <Field label="Street Address" name="streetAddress" required value={form.streetAddress || prefilledForm.streetAddress} onChange={handleChange} />
             <Field
               label="Apartment, floor, etc. (optional)"
               name="apartment"
-              value={form.apartment}
+              value={form.apartment || prefilledForm.apartment}
               onChange={handleChange}
             />
-            <Field label="Town/City" name="townCity" required value={form.townCity} onChange={handleChange} />
-            <Field label="State / Province" name="state" required value={form.state} onChange={handleChange} />
-            <Field label="Postal Code" name="postalCode" required value={form.postalCode} onChange={handleChange} />
-            <Field label="Country" name="country" required value={form.country} onChange={handleChange} />
-            <Field label="Phone Number" name="phoneNumber" type="tel" required value={form.phoneNumber} onChange={handleChange} />
+            <Field label="Town/City" name="townCity" required value={form.townCity || prefilledForm.townCity} onChange={handleChange} />
+            <Field label="State / Province" name="state" required value={form.state || prefilledForm.state} onChange={handleChange} />
+            <Field label="Postal Code" name="postalCode" required value={form.postalCode || prefilledForm.postalCode} onChange={handleChange} />
+            <Field label="Country" name="country" required value={form.country || prefilledForm.country} onChange={handleChange} />
+            <Field label="Phone Number" name="phoneNumber" type="tel" required value={form.phoneNumber || prefilledForm.phoneNumber} onChange={handleChange} />
             <Field
               label="Email Address"
               name="emailAddress"
               type="email"
               required
-              value={form.emailAddress}
+              value={form.emailAddress || prefilledForm.emailAddress}
               onChange={handleChange}
             />
 

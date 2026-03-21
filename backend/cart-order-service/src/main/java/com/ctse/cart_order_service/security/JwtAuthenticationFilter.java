@@ -39,7 +39,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 List<String> roles = jwtUtil.extractRoles(token);
 
                 List<SimpleGrantedAuthority> authorities = roles.stream()
-                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
+                        .map(role -> role.toUpperCase().startsWith("ROLE_") ? role.toUpperCase() : "ROLE_" + role.toUpperCase())
+                        .map(SimpleGrantedAuthority::new)
                         .toList();
 
                 UserPrincipal principal = new UserPrincipal(userId, email, authorities);
