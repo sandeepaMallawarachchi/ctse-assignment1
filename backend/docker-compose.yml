@@ -1,0 +1,57 @@
+services:
+  auth-service:
+    build:
+      context: ./auth-service
+    container_name: auth-service
+    environment:
+      SPRING_MONGODB_URI: ${AUTH_MONGODB_URI}
+      SPRING_DATA_MONGODB_URI: ${AUTH_MONGODB_URI}
+      JWT_SECRET_BASE64: ${JWT_SECRET_BASE64}
+      JWT_ISSUER: ${JWT_ISSUER:-auth-service}
+      JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-1440}
+      JWT_COOKIE_NAME: ${JWT_COOKIE_NAME:-AUTH_TOKEN}
+      JWT_COOKIE_SECURE: ${JWT_COOKIE_SECURE:-false}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      ADMIN_EMAILS: ${ADMIN_EMAILS}
+      FRONTEND_SUCCESS_URL: ${FRONTEND_SUCCESS_URL:-http://localhost:3000/auth/success}
+      FRONTEND_FAILURE_URL: ${FRONTEND_FAILURE_URL:-http://localhost:3000/auth/error}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8080}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+    ports:
+      - "8082:8082"
+    restart: unless-stopped
+
+  product-catelog-service:
+    build:
+      context: ./product-catelog-service
+    container_name: product-catelog-service
+    environment:
+      SPRING_MONGODB_URI: ${PRODUCT_MONGODB_URI}
+      SPRING_DATA_MONGODB_URI: ${PRODUCT_MONGODB_URI}
+      JWT_SECRET_BASE64: ${JWT_SECRET_BASE64}
+      JWT_ISSUER: ${JWT_ISSUER:-auth-service}
+      JWT_COOKIE_NAME: ${JWT_COOKIE_NAME:-AUTH_TOKEN}
+      AWS_REGION: ${AWS_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_KEY_PREFIX: ${AWS_S3_KEY_PREFIX:-products}
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: api-gateway
+    environment:
+      PRODUCT_CATALOG_SERVICE_URL: http://product-catelog-service:8081
+      AUTH_SERVICE_URL: http://auth-service:8082
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8080}
+    depends_on:
+      - auth-service
+      - product-catelog-service
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
