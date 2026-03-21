@@ -22,10 +22,10 @@ USER spring:spring
 
 COPY --from=build /app/target/*.jar app.jar
 
-EXPOSE 8084
+EXPOSE 8083
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD wget -q --spider http://localhost:8084/actuator/health || exit 1
+    CMD sh -c 'wget -q --spider http://localhost:${SERVER_PORT:-8083}/actuator/health || exit 1'
 
 ENTRYPOINT ["java", \
     "-Djava.security.egd=file:/dev/./urandom", \
