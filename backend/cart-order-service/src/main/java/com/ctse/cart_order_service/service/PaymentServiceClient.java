@@ -29,6 +29,9 @@ public class PaymentServiceClient {
     @Value("${service.internal-key}")
     private String internalServiceKey;
 
+    @Value("${service.payment.currency}")
+    private String paymentCurrency;
+
     @Value("${service.self.url}")
     private String selfUrl;
 
@@ -44,7 +47,7 @@ public class PaymentServiceClient {
                 "userId",       order.getUserId(),
                 "userEmail",    order.getUserEmail() != null ? order.getUserEmail() : "",
                 "amount",       order.getTotalAmount(),
-                "currency",     "USD",
+                "currency",     paymentCurrency,
                 "callbackUrl",  selfUrl + "/api/orders/" + order.getOrderNumber() + "/payment-callback"
         );
 
