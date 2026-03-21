@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { formatLkr } from "@/lib/currency";
 import { placeOrder, type ShippingAddress } from "@/lib/orderApi";
+import { apiGetCheckoutDetails } from "@/lib/paymentApi";
 
 type PaymentMethod = "bank" | "cod";
 type OrderStatus = "idle" | "loading" | "success" | "error";
@@ -93,6 +94,52 @@ export default function CheckoutPage() {
     phone: form.phoneNumber || prefilledForm.phoneNumber,
   });
 
+  function submitPayHereForm(orderId: string, shippingAddress: ShippingAddress, customerEmail: string) {
+    return async () => {
+      const checkout = await apiGetCheckoutDetails(orderId);
+
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("pendingPaymentOrderId", orderId);
+      }
+
+      const [firstName, ...lastNameParts] = shippingAddress.fullName.trim().split(/\s+/);
+      const formElement = document.createElement("form");
+      formElement.method = "POST";
+      formElement.action = checkout.checkoutUrl;
+      formElement.style.display = "none";
+
+      const fields: Record<string, string> = {
+        merchant_id: checkout.merchantId,
+        return_url: checkout.returnUrl,
+        cancel_url: checkout.cancelUrl,
+        notify_url: checkout.notifyUrl,
+        order_id: checkout.orderId,
+        items: `Order ${checkout.orderId}`,
+        currency: checkout.currency,
+        amount: Number(checkout.amount).toFixed(2),
+        first_name: firstName || shippingAddress.fullName,
+        last_name: lastNameParts.join(" "),
+        email: customerEmail,
+        phone: shippingAddress.phone,
+        address: shippingAddress.addressLine1,
+        city: shippingAddress.city,
+        country: shippingAddress.country,
+        hash: checkout.hash,
+      };
+
+      Object.entries(fields).forEach(([name, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = name;
+        input.value = value;
+        formElement.appendChild(input);
+      });
+
+      document.body.appendChild(formElement);
+      formElement.submit();
+    };
+  }
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -121,14 +168,24 @@ export default function CheckoutPage() {
         setOrderError(err instanceof Error ? err.message : "Failed to place order. Please try again.");
       }
     } else {
-      // ── Bank: hand off to payment gateway ─────────────────────────────
-      // Store the pending order context so the payment gateway can call
-      // POST /api/orders after payment is confirmed.
       sessionStorage.setItem(
         "pendingOrder",
         JSON.stringify({ shippingAddress, amount: finalAmount, coupon: appliedCoupon?.code ?? null })
       );
-      router.push(`/payment?amount=${finalAmount}&method=bank`);
+      setOrderStatus("loading");
+      setOrderError(null);
+      try {
+        const order = await placeOrder(token, shippingAddress);
+        dispatch(clearCartThunk());
+        await submitPayHereForm(
+          order.orderNumber,
+          shippingAddress,
+          form.emailAddress || prefilledForm.emailAddress
+        )();
+      } catch (err: unknown) {
+        setOrderStatus("error");
+        setOrderError(err instanceof Error ? err.message : "Failed to start payment. Please try again.");
+      }
     }
   };
 

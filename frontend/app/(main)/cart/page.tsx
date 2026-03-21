@@ -162,7 +162,7 @@ export default function CartPage() {
               size="lg"
               onClick={() => dispatch(clearCartThunk())}
             >
-              Update Cart
+              clear Cart
             </Button>
           </div>
 

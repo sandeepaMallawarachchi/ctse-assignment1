@@ -10,12 +10,7 @@ type CountdownValue = {
     value: string;
 };
 
-const countdownData: CountdownValue[] = [
-    { label: "Days", value: "03" },
-    { label: "Hours", value: "23" },
-    { label: "Minutes", value: "19" },
-    { label: "Seconds", value: "56" },
-];
+const FLASH_SALE_DURATION_SECONDS = (((3 * 24) + 23) * 60 + 19) * 60 + 56;
 
 const fallbackProducts: Product[] = [
     {
@@ -99,11 +94,25 @@ export default function FlashSales({ products = fallbackProducts }: { products?:
     const trackRef = useRef<HTMLDivElement | null>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
+    const [timeLeftSeconds, setTimeLeftSeconds] = useState(FLASH_SALE_DURATION_SECONDS);
 
     const scrollAmount = useMemo(
         () => carouselConfig.itemWidth + carouselConfig.itemGap,
         [],
     );
+    const countdownData = useMemo<CountdownValue[]>(() => {
+        const days = Math.floor(timeLeftSeconds / 86400);
+        const hours = Math.floor((timeLeftSeconds % 86400) / 3600);
+        const minutes = Math.floor((timeLeftSeconds % 3600) / 60);
+        const seconds = timeLeftSeconds % 60;
+
+        return [
+            { label: "Days", value: String(days).padStart(2, "0") },
+            { label: "Hours", value: String(hours).padStart(2, "0") },
+            { label: "Minutes", value: String(minutes).padStart(2, "0") },
+            { label: "Seconds", value: String(seconds).padStart(2, "0") },
+        ];
+    }, [timeLeftSeconds]);
 
     const syncButtonState = () => {
         if (!trackRef.current) {
@@ -120,6 +129,16 @@ export default function FlashSales({ products = fallbackProducts }: { products?:
 
     useEffect(() => {
         syncButtonState();
+    }, []);
+
+    useEffect(() => {
+        const timer = window.setInterval(() => {
+            setTimeLeftSeconds((current) =>
+                current <= 1 ? FLASH_SALE_DURATION_SECONDS : current - 1
+            );
+        }, 1000);
+
+        return () => window.clearInterval(timer);
     }, []);
 
     const handleArrowClick = (direction: "left" | "right") => {
