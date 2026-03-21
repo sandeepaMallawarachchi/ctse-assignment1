@@ -25,8 +25,13 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/product-catalog/v3/api-docs",
                                 "/auth-service/v3/api-docs",
+                                "/cart-order-service/v3/api-docs",
                                 "/api/products/**",
+                                "/api/categories/**",
                                 "/api/auth/**",
+                                "/api/cart/**",
+                                "/api/orders/**",
+                                "/api/coupons/**",
                                 "/oauth2/**",
                                 "/login/oauth2/**",
                                 "/actuator/health"

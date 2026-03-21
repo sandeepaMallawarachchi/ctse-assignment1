@@ -35,7 +35,8 @@ public class CartService {
     public CartResponse addItem(String userId, AddToCartRequest request) {
         // Optionally verify product exists in the Product Catalog Service
         Optional<ProductDto> product = productServiceClient.getProduct(request.getProductId());
-        if (product.isPresent() && !product.get().isActive()) {
+        // active == null means catalog didn't return the field — treat as available
+        if (product.isPresent() && Boolean.FALSE.equals(product.get().getActive())) {
             throw new CartException("Product is no longer available: " + request.getProductId());
         }
 

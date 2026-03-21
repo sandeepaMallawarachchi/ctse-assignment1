@@ -29,6 +29,9 @@ public class PaymentServiceClient {
     @Value("${service.internal-key}")
     private String internalServiceKey;
 
+    @Value("${service.self.url}")
+    private String selfUrl;
+
     public void initiatePayment(Order order) {
         String url = paymentServiceUrl + "/api/payment/initiate";
 
@@ -42,8 +45,7 @@ public class PaymentServiceClient {
                 "userEmail",    order.getUserEmail() != null ? order.getUserEmail() : "",
                 "amount",       order.getTotalAmount(),
                 "currency",     "USD",
-                "callbackUrl",  "http://cart-order-service:8082/api/orders/"
-                                        + order.getOrderNumber() + "/payment-callback"
+                "callbackUrl",  selfUrl + "/api/orders/" + order.getOrderNumber() + "/payment-callback"
         );
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);

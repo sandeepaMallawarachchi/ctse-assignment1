@@ -1,7 +1,11 @@
 import type { CartItem, AppliedCoupon } from "@/store/types";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_CART_SERVICE_URL || "http://localhost:8082";
+const BASE_URL = (
+  process.env.NEXT_PUBLIC_CART_SERVICE_URL ||
+  process.env.NEXT_PUBLIC_API_GATEWAY_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "http://localhost:8080"
+).replace(/\/$/, "");
 
 // Shape returned by backend ApiResponse<CartResponse>.data
 export interface CartApiResponse {

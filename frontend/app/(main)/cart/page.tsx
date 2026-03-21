@@ -74,7 +74,7 @@ export default function CartPage() {
                           <button
                             type="button"
                             onClick={() => dispatch(removeCartItem(item.productId))}
-                            className="absolute -top-2 -left-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary-btn)] text-white hover:bg-[var(--color-primary-btn-hover)] transition-colors"
+                            className="absolute -top-2 -left-2 z-10 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-[var(--color-primary-btn)] text-white hover:bg-[var(--color-primary-btn-hover)] transition-colors"
                             aria-label={`Remove ${item.productName}`}
                           >
                             <X size={11} />
@@ -116,7 +116,7 @@ export default function CartPage() {
                                 })
                               )
                             }
-                            className="px-2 py-0.5 text-xs text-[var(--color-text-2)] hover:text-[var(--color-text-1)] leading-none"
+                            className="px-2 py-0.5 cursor-pointer text-xs text-[var(--color-text-2)] hover:text-[var(--color-text-1)] leading-none"
                             aria-label="Increase quantity"
                           >
                             ▲
@@ -131,7 +131,7 @@ export default function CartPage() {
                                 })
                               )
                             }
-                            className="px-2 py-0.5 text-xs text-[var(--color-text-2)] hover:text-[var(--color-text-1)] leading-none border-t border-[var(--color-text-2)]/30"
+                            className="px-2 py-0.5 cursor-pointer text-xs text-[var(--color-text-2)] hover:text-[var(--color-text-1)] leading-none border-t border-[var(--color-text-2)]/30"
                             aria-label="Decrease quantity"
                           >
                             ▼
@@ -178,7 +178,7 @@ export default function CartPage() {
                   <button
                     type="button"
                     onClick={() => dispatch(removeCoupon())}
-                    className="ml-auto text-green-600 hover:text-green-800"
+                    className="ml-auto cursor-pointer text-green-600 hover:text-green-800"
                     aria-label="Remove coupon"
                   >
                     <X size={16} />

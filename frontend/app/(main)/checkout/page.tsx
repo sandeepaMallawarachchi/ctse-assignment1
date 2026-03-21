@@ -1,17 +1,23 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState, FormEvent } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { applyCoupon, removeCoupon } from "@/store/cartSlice";
+import { applyCoupon, removeCoupon, clearCartThunk } from "@/store/cartSlice";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { formatLkr } from "@/lib/currency";
+import { placeOrder, type ShippingAddress } from "@/lib/orderApi";
 
 type PaymentMethod = "bank" | "cod";
+type OrderStatus = "idle" | "loading" | "success" | "error";
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
+
+  const token = useAppSelector((state) => state.auth.token);
   const items = useAppSelector((state) => state.cart.items);
   const totalAmount = useAppSelector((state) => state.cart.totalAmount);
   const appliedCoupon = useAppSelector((state) => state.cart.appliedCoupon);
@@ -23,6 +29,9 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
   const [couponInput, setCouponInput] = useState("");
   const [saveInfo, setSaveInfo] = useState(true);
+  const [orderStatus, setOrderStatus] = useState<OrderStatus>("idle");
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     firstName: "",
@@ -30,6 +39,9 @@ export default function CheckoutPage() {
     streetAddress: "",
     apartment: "",
     townCity: "",
+    state: "",
+    postalCode: "",
+    country: "Sri Lanka",
     phoneNumber: "",
     emailAddress: "",
   });
@@ -38,11 +50,76 @@ export default function CheckoutPage() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const buildShippingAddress = (): ShippingAddress => ({
+    fullName: form.firstName,
+    addressLine1: form.streetAddress,
+    addressLine2: form.apartment || undefined,
+    city: form.townCity,
+    state: form.state,
+    postalCode: form.postalCode,
+    country: form.country,
+    phone: form.phoneNumber,
+  });
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // TODO: POST /api/orders to cart-order-service
-    console.log("Order placed", { form, items, totalAmount, paymentMethod });
+
+    if (!token) {
+      setOrderError("You must be logged in to place an order.");
+      return;
+    }
+    if (items.length === 0) {
+      setOrderError("Your cart is empty.");
+      return;
+    }
+
+    const shippingAddress = buildShippingAddress();
+
+    if (paymentMethod === "cod") {
+      // ── COD: place the order immediately ──────────────────────────────
+      setOrderStatus("loading");
+      setOrderError(null);
+      try {
+        const order = await placeOrder(token, shippingAddress);
+        setOrderNumber(order.orderNumber);
+        setOrderStatus("success");
+        dispatch(clearCartThunk());
+      } catch (err: unknown) {
+        setOrderStatus("error");
+        setOrderError(err instanceof Error ? err.message : "Failed to place order. Please try again.");
+      }
+    } else {
+      // ── Bank: hand off to payment gateway ─────────────────────────────
+      // Store the pending order context so the payment gateway can call
+      // POST /api/orders after payment is confirmed.
+      sessionStorage.setItem(
+        "pendingOrder",
+        JSON.stringify({ shippingAddress, amount: finalAmount, coupon: appliedCoupon?.code ?? null })
+      );
+      router.push(`/payment?amount=${finalAmount}&method=bank`);
+    }
   };
+
+  // ── Success screen ──────────────────────────────────────────────────────────
+  if (orderStatus === "success") {
+    return (
+      <section className="mx-auto max-w-[1240px] px-4 md:px-8 py-24 flex flex-col items-center gap-6 text-center">
+        <CheckCircle className="text-green-500" size={64} />
+        <h2 className="text-2xl font-semibold text-[var(--color-text-1)]">Order Placed!</h2>
+        {orderNumber && (
+          <p className="text-sm text-[var(--color-text-2)]">
+            Order number: <span className="font-medium text-[var(--color-text-1)]">{orderNumber}</span>
+          </p>
+        )}
+        <p className="text-sm text-[var(--color-text-2)]">
+          Your order has been confirmed. We&apos;ll prepare it for delivery.
+        </p>
+        <Button variant="primary" size="lg" onClick={() => router.push("/products")}>
+          Continue Shopping
+        </Button>
+      </section>
+    );
+  }
 
   return (
     <section className="mx-auto max-w-[1240px] px-4 md:px-8 py-12">
@@ -67,6 +144,9 @@ export default function CheckoutPage() {
               onChange={handleChange}
             />
             <Field label="Town/City" name="townCity" required value={form.townCity} onChange={handleChange} />
+            <Field label="State / Province" name="state" required value={form.state} onChange={handleChange} />
+            <Field label="Postal Code" name="postalCode" required value={form.postalCode} onChange={handleChange} />
+            <Field label="Country" name="country" required value={form.country} onChange={handleChange} />
             <Field label="Phone Number" name="phoneNumber" type="tel" required value={form.phoneNumber} onChange={handleChange} />
             <Field
               label="Email Address"
@@ -77,13 +157,12 @@ export default function CheckoutPage() {
               onChange={handleChange}
             />
 
-            {/* Save info */}
             <label className="flex cursor-pointer items-center gap-3">
               <input
                 type="checkbox"
                 checked={saveInfo}
                 onChange={(e) => setSaveInfo(e.target.checked)}
-                className="h-5 w-5 accent-[var(--color-primary-btn)] rounded"
+                className="h-5 w-5 cursor-pointer accent-[var(--color-primary-btn)] rounded"
               />
               <span className="text-sm text-[var(--color-text-1)]">
                 Save this information for faster check-out next time
@@ -96,16 +175,11 @@ export default function CheckoutPage() {
         <div className="w-full lg:w-[420px] lg:shrink-0 flex flex-col gap-6">
           {/* Product list */}
           {items.length === 0 ? (
-            <p className="text-sm text-[var(--color-text-2)]">
-              Your cart is empty.
-            </p>
+            <p className="text-sm text-[var(--color-text-2)]">Your cart is empty.</p>
           ) : (
             <div className="flex flex-col gap-5">
               {items.map((item) => (
-                <div
-                  key={item.productId}
-                  className="flex items-center justify-between gap-4"
-                >
+                <div key={item.productId} className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded bg-[var(--color-secondary)]">
                       <Image
@@ -115,9 +189,7 @@ export default function CheckoutPage() {
                         className="object-contain p-1"
                       />
                     </div>
-                    <span className="text-sm text-[var(--color-text-1)]">
-                      {item.productName}
-                    </span>
+                    <span className="text-sm text-[var(--color-text-1)]">{item.productName}</span>
                   </div>
                   <span className="text-sm font-medium text-[var(--color-text-1)] whitespace-nowrap">
                     {formatLkr(item.price * item.quantity)}
@@ -136,9 +208,7 @@ export default function CheckoutPage() {
             {appliedCoupon && (
               <div className="flex justify-between text-green-600">
                 <span className="text-sm">Discount ({appliedCoupon.code}):</span>
-                <span className="text-sm font-medium">
-                  -{formatLkr(appliedCoupon.discountAmount)}
-                </span>
+                <span className="text-sm font-medium">-{formatLkr(appliedCoupon.discountAmount)}</span>
               </div>
             )}
             <div className="flex justify-between border-t border-[var(--color-text-2)]/20 pt-4">
@@ -161,7 +231,7 @@ export default function CheckoutPage() {
                   value="bank"
                   checked={paymentMethod === "bank"}
                   onChange={() => setPaymentMethod("bank")}
-                  className="h-4 w-4 accent-[var(--color-text-1)]"
+                  className="h-4 w-4 cursor-pointer accent-[var(--color-text-1)]"
                 />
                 <span className="text-sm font-medium text-[var(--color-text-1)]">Bank</span>
               </div>
@@ -190,7 +260,7 @@ export default function CheckoutPage() {
                 value="cod"
                 checked={paymentMethod === "cod"}
                 onChange={() => setPaymentMethod("cod")}
-                className="h-4 w-4 accent-[var(--color-text-1)]"
+                className="h-4 w-4 cursor-pointer accent-[var(--color-text-1)]"
               />
               <span className="text-sm font-medium text-[var(--color-text-1)]">Cash on delivery</span>
             </label>
@@ -206,7 +276,7 @@ export default function CheckoutPage() {
                 <button
                   type="button"
                   onClick={() => dispatch(removeCoupon())}
-                  className="ml-auto text-green-600 hover:text-green-800"
+                  className="ml-auto cursor-pointer text-green-600 hover:text-green-800"
                   aria-label="Remove coupon"
                 >
                   <X size={16} />
@@ -247,9 +317,32 @@ export default function CheckoutPage() {
             )}
           </div>
 
+          {/* Error banner */}
+          {orderStatus === "error" && orderError && (
+            <div className="flex items-center gap-3 rounded border border-red-300 bg-red-50 px-4 py-3">
+              <AlertCircle size={16} className="shrink-0 text-red-500" />
+              <p className="text-sm text-red-700">{orderError}</p>
+            </div>
+          )}
+
           {/* Place Order */}
-          <Button type="submit" variant="primary" size="lg" className="w-fit">
-            Place Order
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            className="w-fit"
+            disabled={orderStatus === "loading" || items.length === 0}
+          >
+            {orderStatus === "loading" ? (
+              <span className="flex items-center gap-2">
+                <Loader2 size={16} className="animate-spin" />
+                Placing Order…
+              </span>
+            ) : paymentMethod === "bank" ? (
+              "Proceed to Payment"
+            ) : (
+              "Place Order"
+            )}
           </Button>
         </div>
       </form>
@@ -277,9 +370,7 @@ function Field({
     <div className="flex flex-col gap-2">
       <label htmlFor={name} className="text-sm font-medium text-[var(--color-text-1)]">
         {label}
-        {required && (
-          <span className="text-[var(--color-primary-btn)] ml-0.5">*</span>
-        )}
+        {required && <span className="text-[var(--color-primary-btn)] ml-0.5">*</span>}
       </label>
       <input
         id={name}
