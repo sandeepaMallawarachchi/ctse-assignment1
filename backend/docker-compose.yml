@@ -41,20 +41,81 @@ services:
       - "8081:8081"
     restart: unless-stopped
 
+  cart-order-mongodb:
+    image: mongo:7.0
+    container_name: cart-order-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: cart_order_db
+    volumes:
+      - cart_order_mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  payment-mongodb:
+    image: mongo:7.0
+    container_name: payment-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: payment_service_db
+    volumes:
+      - payment_mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: ./payment-service
+    container_name: payment-service
+    environment:
+      SERVER_PORT: 8090
+      MONGODB_URI: mongodb://payment-mongodb:27017/payment_service_db
+      CART_ORDER_SERVICE_URL: http://cart-order-service:8083
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-ctse-internal-secret-2024}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8080}
+      PAYHERE_SANDBOX: ${PAYHERE_SANDBOX:-true}
+      PAYHERE_MERCHANT_ID: ${PAYHERE_MERCHANT_ID}
+      PAYHERE_MERCHANT_SECRET: ${PAYHERE_MERCHANT_SECRET}
+      PAYHERE_CURRENCY: ${PAYHERE_CURRENCY:-USD}
+      PAYHERE_NOTIFY_URL: ${PAYHERE_NOTIFY_URL}
+      PAYHERE_RETURN_URL: ${PAYHERE_RETURN_URL:-http://localhost:3000/payment/success}
+      PAYHERE_CANCEL_URL: ${PAYHERE_CANCEL_URL:-http://localhost:3000/payment/cancel}
+    depends_on:
+      payment-mongodb:
+        condition: service_healthy
+      cart-order-service:
+        condition: service_started
+    ports:
+      - "8090:8090"
+    restart: unless-stopped
+
   cart-order-service:
     build:
       context: ./cart-order-service
     container_name: cart-order-service
     environment:
-      MONGODB_URI: ${CART_MONGODB_URI}
+      SERVER_PORT: 8083
+      MONGODB_URI: mongodb://cart-order-mongodb:27017/cart_order_db
       JWT_SECRET_BASE64: ${JWT_SECRET_BASE64}
       PRODUCT_CATALOG_URL: http://product-catelog-service:8081
-      PAYMENT_SERVICE_URL: http://payment-service:8083
+      PAYMENT_SERVICE_URL: http://payment-service:8090
+      PAYHERE_CURRENCY: ${PAYHERE_CURRENCY:-LKR}
       API_GATEWAY_URL: http://api-gateway:8080
-      SELF_URL: http://cart-order-service:8084
-      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+      SELF_URL: http://cart-order-service:8083
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:-ctse-internal-secret-2024}
+    depends_on:
+      cart-order-mongodb:
+        condition: service_healthy
+      product-catelog-service:
+        condition: service_started
     ports:
-      - "8084:8084"
+      - "8083:8083"
     restart: unless-stopped
 
   api-gateway:
@@ -64,12 +125,18 @@ services:
     environment:
       PRODUCT_CATALOG_SERVICE_URL: http://product-catelog-service:8081
       AUTH_SERVICE_URL: http://auth-service:8082
-      CART_ORDER_SERVICE_URL: http://cart-order-service:8084
+      CART_ORDER_SERVICE_URL: http://cart-order-service:8083
+      PAYMENT_SERVICE_URL: http://payment-service:8090
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8080}
     depends_on:
       - auth-service
       - product-catelog-service
       - cart-order-service
+      - payment-service
     ports:
       - "8080:8080"
     restart: unless-stopped
+
+volumes:
+  cart_order_mongodb_data:
+  payment_mongodb_data:

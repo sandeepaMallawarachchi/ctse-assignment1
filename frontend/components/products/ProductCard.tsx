@@ -3,6 +3,7 @@
 import { Eye, Heart, Star } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/toast";
 import { useAppDispatch } from "@/store/hooks";
 import { addCartItem } from "@/store/cartSlice";
 import { formatLkr } from "@/lib/currency";
@@ -91,6 +92,7 @@ export default function ProductCard({
 }: ProductCardProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { showToast } = useToast();
   const isRemoteImage = /^https?:\/\//i.test(product.imageUrl);
   const shouldShowDiscount = (product.discountPercent ?? 0) > 0;
   const badgeLabel = product.badgeLabel ?? (shouldShowDiscount ? `-${product.discountPercent}%` : null);
@@ -100,6 +102,32 @@ export default function ProductCard({
 
   const navigateToDetails = () => {
     router.push(`/products/${productSlug}`);
+  };
+
+  const handleAddToCart = async () => {
+    try {
+      await dispatch(
+        addCartItem({
+          productId: String(product.id),
+          productName: product.name,
+          price: product.currentPrice,
+          imageUrl: product.imageUrl,
+        })
+      ).unwrap();
+
+      showToast({
+        title: "Added to cart",
+        description: `${product.name} was added to your cart.`,
+        variant: "success",
+      });
+      onAddToCartClick?.(product.id);
+    } catch (error) {
+      showToast({
+        title: "Could not add to cart",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "error",
+      });
+    }
   };
 
   return (
@@ -156,17 +184,9 @@ export default function ProductCard({
 
         <button
           type="button"
-          onClick={(event) => {
+          onClick={async (event) => {
             event.stopPropagation();
-            dispatch(
-              addCartItem({
-                productId: String(product.id),
-                productName: product.name,
-                price: product.currentPrice,
-                imageUrl: product.imageUrl,
-              })
-            );
-            onAddToCartClick?.(product.id);
+            await handleAddToCart();
           }}
           className="absolute bottom-0 left-0 w-full translate-y-full bg-(--color-btn-2) py-2 font-medium text-white opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100"
         >

@@ -2,13 +2,14 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState, FormEvent } from "react";
+import { useMemo, useState, FormEvent } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { applyCoupon, removeCoupon, clearCartThunk } from "@/store/cartSlice";
 import { Button } from "@/components/ui/button";
 import { X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { formatLkr } from "@/lib/currency";
 import { placeOrder, type ShippingAddress } from "@/lib/orderApi";
+import { apiGetCheckoutDetails } from "@/lib/paymentApi";
 
 type PaymentMethod = "bank" | "cod";
 type OrderStatus = "idle" | "loading" | "success" | "error";
@@ -18,6 +19,7 @@ export default function CheckoutPage() {
   const dispatch = useAppDispatch();
 
   const token = useAppSelector((state) => state.auth.token);
+  const user = useAppSelector((state) => state.auth.user);
   const items = useAppSelector((state) => state.cart.items);
   const totalAmount = useAppSelector((state) => state.cart.totalAmount);
   const appliedCoupon = useAppSelector((state) => state.cart.appliedCoupon);
@@ -46,20 +48,97 @@ export default function CheckoutPage() {
     emailAddress: "",
   });
 
+  const prefilledForm = useMemo(() => {
+    if (!user) {
+      return {
+        firstName: "",
+        streetAddress: "",
+        apartment: "",
+        townCity: "",
+        state: "",
+        postalCode: "",
+        country: "Sri Lanka",
+        phoneNumber: "",
+        emailAddress: "",
+      };
+    }
+
+    const address = user.address;
+    const defaultFullName = address?.fullName?.trim() || user.fullName?.trim() || `${user.firstName} ${user.lastName}`.trim();
+
+    return {
+      firstName: defaultFullName,
+      streetAddress: address?.addressLine1 || "",
+      apartment: address?.addressLine2 || "",
+      townCity: address?.city || "",
+      state: address?.state || "",
+      postalCode: address?.postalCode || "",
+      country: address?.country || "Sri Lanka",
+      phoneNumber: address?.phoneNumber || user.phoneNumber || "",
+      emailAddress: user.email || "",
+    };
+  }, [user]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const buildShippingAddress = (): ShippingAddress => ({
-    fullName: form.firstName,
-    addressLine1: form.streetAddress,
-    addressLine2: form.apartment || undefined,
-    city: form.townCity,
-    state: form.state,
-    postalCode: form.postalCode,
-    country: form.country,
-    phone: form.phoneNumber,
+    fullName: form.firstName || prefilledForm.firstName,
+    addressLine1: form.streetAddress || prefilledForm.streetAddress,
+    addressLine2: form.apartment || prefilledForm.apartment || undefined,
+    city: form.townCity || prefilledForm.townCity,
+    state: form.state || prefilledForm.state,
+    postalCode: form.postalCode || prefilledForm.postalCode,
+    country: form.country || prefilledForm.country,
+    phone: form.phoneNumber || prefilledForm.phoneNumber,
   });
+
+  function submitPayHereForm(orderId: string, shippingAddress: ShippingAddress, customerEmail: string) {
+    return async () => {
+      const checkout = await apiGetCheckoutDetails(orderId);
+
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("pendingPaymentOrderId", orderId);
+      }
+
+      const [firstName, ...lastNameParts] = shippingAddress.fullName.trim().split(/\s+/);
+      const formElement = document.createElement("form");
+      formElement.method = "POST";
+      formElement.action = checkout.checkoutUrl;
+      formElement.style.display = "none";
+
+      const fields: Record<string, string> = {
+        merchant_id: checkout.merchantId,
+        return_url: checkout.returnUrl,
+        cancel_url: checkout.cancelUrl,
+        notify_url: checkout.notifyUrl,
+        order_id: checkout.orderId,
+        items: `Order ${checkout.orderId}`,
+        currency: checkout.currency,
+        amount: Number(checkout.amount).toFixed(2),
+        first_name: firstName || shippingAddress.fullName,
+        last_name: lastNameParts.join(" "),
+        email: customerEmail,
+        phone: shippingAddress.phone,
+        address: shippingAddress.addressLine1,
+        city: shippingAddress.city,
+        country: shippingAddress.country,
+        hash: checkout.hash,
+      };
+
+      Object.entries(fields).forEach(([name, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = name;
+        input.value = value;
+        formElement.appendChild(input);
+      });
+
+      document.body.appendChild(formElement);
+      formElement.submit();
+    };
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -89,14 +168,24 @@ export default function CheckoutPage() {
         setOrderError(err instanceof Error ? err.message : "Failed to place order. Please try again.");
       }
     } else {
-      // ── Bank: hand off to payment gateway ─────────────────────────────
-      // Store the pending order context so the payment gateway can call
-      // POST /api/orders after payment is confirmed.
       sessionStorage.setItem(
         "pendingOrder",
         JSON.stringify({ shippingAddress, amount: finalAmount, coupon: appliedCoupon?.code ?? null })
       );
-      router.push(`/payment?amount=${finalAmount}&method=bank`);
+      setOrderStatus("loading");
+      setOrderError(null);
+      try {
+        const order = await placeOrder(token, shippingAddress);
+        dispatch(clearCartThunk());
+        await submitPayHereForm(
+          order.orderNumber,
+          shippingAddress,
+          form.emailAddress || prefilledForm.emailAddress
+        )();
+      } catch (err: unknown) {
+        setOrderStatus("error");
+        setOrderError(err instanceof Error ? err.message : "Failed to start payment. Please try again.");
+      }
     }
   };
 
@@ -134,26 +223,26 @@ export default function CheckoutPage() {
           </h2>
 
           <div className="flex flex-col gap-6">
-            <Field label="First Name" name="firstName" required value={form.firstName} onChange={handleChange} />
+            <Field label="First Name" name="firstName" required value={form.firstName || prefilledForm.firstName} onChange={handleChange} />
             <Field label="Company Name" name="companyName" value={form.companyName} onChange={handleChange} />
-            <Field label="Street Address" name="streetAddress" required value={form.streetAddress} onChange={handleChange} />
+            <Field label="Street Address" name="streetAddress" required value={form.streetAddress || prefilledForm.streetAddress} onChange={handleChange} />
             <Field
               label="Apartment, floor, etc. (optional)"
               name="apartment"
-              value={form.apartment}
+              value={form.apartment || prefilledForm.apartment}
               onChange={handleChange}
             />
-            <Field label="Town/City" name="townCity" required value={form.townCity} onChange={handleChange} />
-            <Field label="State / Province" name="state" required value={form.state} onChange={handleChange} />
-            <Field label="Postal Code" name="postalCode" required value={form.postalCode} onChange={handleChange} />
-            <Field label="Country" name="country" required value={form.country} onChange={handleChange} />
-            <Field label="Phone Number" name="phoneNumber" type="tel" required value={form.phoneNumber} onChange={handleChange} />
+            <Field label="Town/City" name="townCity" required value={form.townCity || prefilledForm.townCity} onChange={handleChange} />
+            <Field label="State / Province" name="state" required value={form.state || prefilledForm.state} onChange={handleChange} />
+            <Field label="Postal Code" name="postalCode" required value={form.postalCode || prefilledForm.postalCode} onChange={handleChange} />
+            <Field label="Country" name="country" required value={form.country || prefilledForm.country} onChange={handleChange} />
+            <Field label="Phone Number" name="phoneNumber" type="tel" required value={form.phoneNumber || prefilledForm.phoneNumber} onChange={handleChange} />
             <Field
               label="Email Address"
               name="emailAddress"
               type="email"
               required
-              value={form.emailAddress}
+              value={form.emailAddress || prefilledForm.emailAddress}
               onChange={handleChange}
             />
 
