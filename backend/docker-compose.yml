@@ -41,6 +41,22 @@ services:
       - "8081:8081"
     restart: unless-stopped
 
+  cart-order-service:
+    build:
+      context: ./cart-order-service
+    container_name: cart-order-service
+    environment:
+      MONGODB_URI: ${CART_MONGODB_URI}
+      JWT_SECRET_BASE64: ${JWT_SECRET_BASE64}
+      PRODUCT_CATALOG_URL: http://product-catelog-service:8081
+      PAYMENT_SERVICE_URL: http://payment-service:8083
+      API_GATEWAY_URL: http://api-gateway:8080
+      SELF_URL: http://cart-order-service:8084
+      INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY}
+    ports:
+      - "8084:8084"
+    restart: unless-stopped
+
   api-gateway:
     build:
       context: ./api-gateway
@@ -48,10 +64,12 @@ services:
     environment:
       PRODUCT_CATALOG_SERVICE_URL: http://product-catelog-service:8081
       AUTH_SERVICE_URL: http://auth-service:8082
+      CART_ORDER_SERVICE_URL: http://cart-order-service:8084
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8080}
     depends_on:
       - auth-service
       - product-catelog-service
+      - cart-order-service
     ports:
       - "8080:8080"
     restart: unless-stopped

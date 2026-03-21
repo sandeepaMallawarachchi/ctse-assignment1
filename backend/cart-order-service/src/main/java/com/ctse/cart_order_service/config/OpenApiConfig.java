@@ -16,8 +16,11 @@ import java.util.List;
 @Configuration
 public class OpenApiConfig {
 
-    @Value("${server.port:8082}")
+    @Value("${server.port:8084}")
     private String serverPort;
+
+    @Value("${service.gateway.url:http://localhost:8080}")
+    private String gatewayUrl;
 
     @Bean
     public OpenAPI openAPI() {
@@ -40,8 +43,11 @@ public class OpenApiConfig {
                                 .email("it22586766@my.sliit.lk")))
                 .servers(List.of(
                         new Server()
+                                .url(gatewayUrl)
+                                .description("API Gateway (recommended)"),
+                        new Server()
                                 .url("http://localhost:" + serverPort)
-                                .description("Local Development")))
+                                .description("Direct — Local Development")))
                 .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
                 .components(new Components()
                         .addSecuritySchemes("Bearer Authentication",

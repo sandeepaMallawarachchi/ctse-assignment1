@@ -27,11 +27,13 @@ public class JwtUtil {
     }
 
     public String extractUserId(String token) {
-        return extractAllClaims(token).getSubject();
+        // Auth-service stores userId as a claim (subject holds the email)
+        return extractAllClaims(token).get("userId", String.class);
     }
 
     public String extractEmail(String token) {
-        return extractAllClaims(token).get("email", String.class);
+        // Auth-service stores email as the JWT subject
+        return extractAllClaims(token).getSubject();
     }
 
     public List<String> extractRoles(String token) {

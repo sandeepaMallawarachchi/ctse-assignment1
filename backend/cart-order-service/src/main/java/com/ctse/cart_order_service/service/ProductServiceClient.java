@@ -1,5 +1,6 @@
 package com.ctse.cart_order_service.service;
 
+import com.ctse.cart_order_service.dto.external.ProductApiResponse;
 import com.ctse.cart_order_service.dto.external.ProductDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,9 +28,16 @@ public class ProductServiceClient {
     public Optional<ProductDto> getProduct(String productId) {
         try {
             String url = productCatalogUrl + "/api/products/" + productId;
-            ResponseEntity<ProductDto> response = restTemplate.getForEntity(url, ProductDto.class);
+            // Catalog wraps responses in ApiResponse<ProductResponse> — unwrap via ProductApiResponse
+            ResponseEntity<ProductApiResponse> response =
+                    restTemplate.getForEntity(url, ProductApiResponse.class);
+            ProductApiResponse body = response.getBody();
+            if (body == null || body.getData() == null) {
+                log.warn("Empty response for product {} from catalog service", productId);
+                return Optional.empty();
+            }
             log.debug("Fetched product {} from catalog service", productId);
-            return Optional.ofNullable(response.getBody());
+            return Optional.of(body.getData());
         } catch (Exception e) {
             log.warn("Could not fetch product {} from catalog service: {}", productId, e.getMessage());
             return Optional.empty();
