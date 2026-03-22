@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { SlidersHorizontal, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -133,7 +134,7 @@ function Filters({
   );
 }
 
-export default function AllProductsPage() {
+function AllProductsPageContent() {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [categoriesData, setCategoriesData] = useState<CatalogCategory[]>([]);
@@ -369,5 +370,21 @@ export default function AllProductsPage() {
         />
       </aside>
     </section>
+  );
+}
+
+export default function AllProductsPage() {
+  return (
+    <Suspense
+      fallback={
+        <section className="mx-auto max-w-[1240px] px-4 py-12 md:px-8">
+          <div className="rounded border border-black/10 bg-white px-6 py-16 text-center text-sm text-(--color-text-2)">
+            Loading products...
+          </div>
+        </section>
+      }
+    >
+      <AllProductsPageContent />
+    </Suspense>
   );
 }
