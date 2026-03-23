@@ -305,7 +305,7 @@ function AllProductsPageContent() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-        <aside className="hidden rounded border border-black/10 bg-white p-5 lg:block">
+        <aside className="hidden rounded border border-black/10 bg-white p-5 lg:sticky lg:top-6 lg:block lg:self-start">
           <Filters
             categories={categories}
             subCategories={subCategories}
