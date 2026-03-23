@@ -4,11 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, Heart, LogOut, Menu, Search, ShoppingCart, User, X } from "lucide-react";
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { clearToken, logoutUser } from "@/store/authSlice";
 import { hasAdminRole } from "@/lib/authRoles";
 import { useToast } from "@/components/ui/toast";
+import { apiGetProducts, type CatalogProduct } from "@/lib/productApi";
+import { formatLkr } from "@/lib/currency";
 
 const guestNavLinks = [
   { label: "Home", href: "/" },
@@ -27,6 +29,8 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<CatalogProduct[]>([]);
+  const [searchResultsOpen, setSearchResultsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -34,7 +38,9 @@ export default function Header() {
   const totalItems = useAppSelector((state) => state.cart.totalItems);
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
   const isAdmin = hasAdminRole(user?.roles);
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
 
   async function handleLogout() {
     const result = await dispatch(logoutUser());
@@ -50,6 +56,41 @@ export default function Header() {
     router.push("/");
   }
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadSearchProducts() {
+      try {
+        const products = await apiGetProducts();
+        if (!active) return;
+        setSearchResults(products.filter((product) => product.active));
+      } catch {
+        if (!active) return;
+        setSearchResults([]);
+      }
+    }
+
+    void loadSearchProducts();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    function handleDocumentClick(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setSearchResultsOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleDocumentClick);
+    return () => document.removeEventListener("mousedown", handleDocumentClick);
+  }, []);
+
   function handleSearchSubmit(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
     const query = searchQuery.trim();
@@ -59,8 +100,35 @@ export default function Header() {
     }
 
     const destination = searchParams.size > 0 ? `/products?${searchParams.toString()}` : "/products";
+    setSearchResultsOpen(false);
     setIsMobileMenuOpen(false);
     router.push(destination);
+  }
+
+  const previewResults = useMemo(() => {
+    if (normalizedSearchQuery.length === 0) return [];
+
+    return searchResults
+      .filter((product) => {
+        const candidateText = [
+          product.name,
+          product.category,
+          product.subCategory ?? "",
+          product.brand,
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return candidateText.includes(normalizedSearchQuery);
+      })
+      .slice(0, 5);
+  }, [normalizedSearchQuery, searchResults]);
+
+  function handleSearchResultClick(slug: string) {
+    setSearchResultsOpen(false);
+    setIsMobileMenuOpen(false);
+    setSearchQuery("");
+    router.push(`/products/${slug}`);
   }
 
   const navLinks = isAuthenticated ? authNavLinks : guestNavLinks;
@@ -108,21 +176,71 @@ export default function Header() {
           </nav>
 
           <div className="hidden items-center gap-6 lg:flex">
-            <form onSubmit={handleSearchSubmit} className="flex h-12 w-75 items-center gap-3 rounded bg-(--color-secondary) px-4">
-              <label className="contents">
-                <span className="sr-only">Search products</span>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="What are you looking for?"
-                  className="w-full border-none bg-transparent text-sm text-(--color-text-1) placeholder:text-(--color-text-2) outline-none"
-                />
-              </label>
-              <button type="submit" aria-label="Search products" className="cursor-pointer text-(--color-text-1)">
-                <Search size={20} className="text-(--color-text-1)" />
-              </button>
-            </form>
+            <div className="relative" ref={searchRef}>
+              <form onSubmit={handleSearchSubmit} className="flex h-12 w-75 items-center gap-3 rounded bg-(--color-secondary) px-4">
+                <label className="contents">
+                  <span className="sr-only">Search products</span>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setSearchQuery(value);
+                      setSearchResultsOpen(value.trim().length > 0);
+                    }}
+                    onFocus={() => setSearchResultsOpen(normalizedSearchQuery.length > 0)}
+                    placeholder="What are you looking for?"
+                    className="w-full border-none bg-transparent text-sm text-(--color-text-1) placeholder:text-(--color-text-2) outline-none"
+                  />
+                </label>
+                <button type="submit" aria-label="Search products" className="cursor-pointer text-(--color-text-1)">
+                  <Search size={20} className="text-(--color-text-1)" />
+                </button>
+              </form>
+
+              {searchResultsOpen && normalizedSearchQuery.length > 0 ? (
+                <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-xl border border-black/10 bg-white shadow-xl">
+                  {previewResults.length > 0 ? (
+                    <>
+                      <div className="max-h-[320px] overflow-y-auto py-2">
+                        {previewResults.map((product) => (
+                          <button
+                            key={product.id}
+                            type="button"
+                            onClick={() => handleSearchResultClick(product.slug)}
+                            className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-(--color-secondary)"
+                          >
+                            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded bg-(--color-secondary)">
+                              <Image
+                                src={product.imageUrl}
+                                alt={product.name}
+                                fill
+                                unoptimized={/^https?:\/\//i.test(product.imageUrl)}
+                                className="object-contain p-1.5"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium text-(--color-text-1)">{product.name}</p>
+                              <p className="mt-1 text-sm text-(--color-primary-btn)">{formatLkr(product.price)}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleSearchSubmit()}
+                        className="flex w-full items-center justify-between border-t border-black/10 px-4 py-3 text-sm font-medium text-(--color-text-1) hover:bg-(--color-secondary)"
+                      >
+                        <span>See all results for &quot;{searchQuery.trim()}&quot;</span>
+                        <Search size={16} />
+                      </button>
+                    </>
+                  ) : (
+                    <div className="px-4 py-4 text-sm text-(--color-text-2)">No matching products found.</div>
+                  )}
+                </div>
+              ) : null}
+            </div>
 
             <button type="button" aria-label="Wishlist" className="text-(--color-text-1)">
               <Heart size={24} strokeWidth={1.8} />
