@@ -145,6 +145,7 @@ function AllProductsPageContent() {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const searchQuery = searchParams.get("q")?.trim().toLowerCase() ?? "";
 
   useEffect(() => {
     let active = true;
@@ -229,6 +230,16 @@ function AllProductsPageContent() {
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
+      const normalizedName = product.name.toLowerCase();
+      const normalizedCategory = product.category.toLowerCase();
+      const normalizedSubCategory = product.subCategory?.toLowerCase() ?? "";
+      const normalizedBrand = product.brand.toLowerCase();
+      const searchPass =
+        searchQuery.length === 0 ||
+        normalizedName.includes(searchQuery) ||
+        normalizedCategory.includes(searchQuery) ||
+        normalizedSubCategory.includes(searchQuery) ||
+        normalizedBrand.includes(searchQuery);
       const categoryPass =
         selectedCategories.length === 0 || selectedCategories.includes(product.category);
       const subCategoryPass =
@@ -237,9 +248,9 @@ function AllProductsPageContent() {
       const brandPass = selectedBrands.length === 0 || selectedBrands.includes(product.brand);
       const pricePass = maxPrice === null || product.price <= maxPrice;
 
-      return categoryPass && subCategoryPass && brandPass && pricePass;
+      return searchPass && categoryPass && subCategoryPass && brandPass && pricePass;
     });
-  }, [maxPrice, products, selectedBrands, selectedCategories, selectedSubCategories]);
+  }, [maxPrice, products, searchQuery, selectedBrands, selectedCategories, selectedSubCategories]);
 
   const handleCategoryToggle = (category: string) => {
     setSelectedCategories((current) =>
@@ -276,6 +287,11 @@ function AllProductsPageContent() {
           <p className="mt-2 text-(--color-text-2)">
             {loading ? "Loading products..." : `${filteredProducts.length} products found`}
           </p>
+          {searchQuery ? (
+            <p className="mt-1 text-sm text-(--color-text-2)">
+              Search results for <span className="font-medium text-(--color-text-1)">&quot;{searchParams.get("q")?.trim()}&quot;</span>
+            </p>
+          ) : null}
         </div>
 
         <Button

@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, Heart, LogOut, Menu, Search, ShoppingCart, User, X } from "lucide-react";
-import { useRef, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { clearToken, logoutUser } from "@/store/authSlice";
 import { hasAdminRole } from "@/lib/authRoles";
@@ -26,6 +26,7 @@ const authNavLinks = [
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -47,6 +48,19 @@ export default function Header() {
       variant: logoutUser.fulfilled.match(result) ? "success" : "info",
     });
     router.push("/");
+  }
+
+  function handleSearchSubmit(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    const query = searchQuery.trim();
+    const searchParams = new URLSearchParams();
+    if (query) {
+      searchParams.set("q", query);
+    }
+
+    const destination = searchParams.size > 0 ? `/products?${searchParams.toString()}` : "/products";
+    setIsMobileMenuOpen(false);
+    router.push(destination);
   }
 
   const navLinks = isAuthenticated ? authNavLinks : guestNavLinks;
@@ -94,15 +108,21 @@ export default function Header() {
           </nav>
 
           <div className="hidden items-center gap-6 lg:flex">
-            <label className="flex h-12 w-75 items-center gap-3 rounded bg-(--color-secondary) px-4">
-              <span className="sr-only">Search products</span>
-              <input
-                type="text"
-                placeholder="What are you looking for?"
-                className="w-full border-none bg-transparent text-sm text-(--color-text-1) placeholder:text-(--color-text-2) outline-none"
-              />
-              <Search size={20} className="text-(--color-text-1)" />
-            </label>
+            <form onSubmit={handleSearchSubmit} className="flex h-12 w-75 items-center gap-3 rounded bg-(--color-secondary) px-4">
+              <label className="contents">
+                <span className="sr-only">Search products</span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="What are you looking for?"
+                  className="w-full border-none bg-transparent text-sm text-(--color-text-1) placeholder:text-(--color-text-2) outline-none"
+                />
+              </label>
+              <button type="submit" aria-label="Search products" className="cursor-pointer text-(--color-text-1)">
+                <Search size={20} className="text-(--color-text-1)" />
+              </button>
+            </form>
 
             <button type="button" aria-label="Wishlist" className="text-(--color-text-1)">
               <Heart size={24} strokeWidth={1.8} />
@@ -191,15 +211,21 @@ export default function Header() {
         </div>
 
         <div className={`${isMobileMenuOpen ? "grid" : "hidden"} gap-4 pb-5 lg:hidden`}>
-          <label className="flex h-11 w-full items-center gap-3 rounded bg-(--color-secondary) px-4">
-            <span className="sr-only">Search products</span>
-            <input
-              type="text"
-              placeholder="What are you looking for?"
-              className="w-full border-none bg-transparent text-sm text-(--color-text-1) placeholder:text-(--color-text-2) outline-none"
-            />
-            <Search size={20} className="text-(--color-text-1)" />
-          </label>
+          <form onSubmit={handleSearchSubmit} className="flex h-11 w-full items-center gap-3 rounded bg-(--color-secondary) px-4">
+            <label className="contents">
+              <span className="sr-only">Search products</span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="What are you looking for?"
+                className="w-full border-none bg-transparent text-sm text-(--color-text-1) placeholder:text-(--color-text-2) outline-none"
+              />
+            </label>
+            <button type="submit" aria-label="Search products" className="cursor-pointer text-(--color-text-1)">
+              <Search size={20} className="text-(--color-text-1)" />
+            </button>
+          </form>
 
           <nav className="grid gap-3">
             {navLinks.map((item) => (

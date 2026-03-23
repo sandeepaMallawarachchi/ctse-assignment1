@@ -142,7 +142,7 @@ function normalizeColors(colors: string[]) {
 }
 
 function normalizeSizes(sizes: string[]) {
-  return sizes.length > 0 ? sizes : ["S", "M", "L", "XL"];
+  return sizes;
 }
 
 function mapProduct(product: BackendProductResponse, index = 0): CatalogProduct {

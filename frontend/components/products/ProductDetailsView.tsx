@@ -77,6 +77,7 @@ export default function ProductDetailsView({ product, relatedProducts }: Product
   const [selectedSize, setSelectedSize] = useState(product.sizes[2] ?? product.sizes[0]);
   const [quantity, setQuantity] = useState(1);
   const isRemoteSelectedImage = /^https?:\/\//i.test(selectedImage);
+  const availableSizes = useMemo(() => product.sizes.filter((size) => Boolean(size?.trim())), [product.sizes]);
 
   useEffect(() => {
     setSelectedImage(galleryImages[0]);
@@ -167,25 +168,27 @@ export default function ProductDetailsView({ product, relatedProducts }: Product
             </div>
           </div>
 
-          <div className="mt-5 flex items-center gap-3">
-            <span className="text-(--color-text-1)">Size:</span>
-            <div className="flex flex-wrap gap-2">
-              {product.sizes.map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => setSelectedSize(size)}
-                  className={`h-8 min-w-9 rounded border px-2 ${
-                    selectedSize === size
-                      ? "border-(--color-primary-btn) bg-(--color-primary-btn) text-white"
-                      : "border-black/30 bg-white text-(--color-text-1)"
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
+          {availableSizes.length > 0 ? (
+            <div className="mt-5 flex items-center gap-3">
+              <span className="text-(--color-text-1)">Size:</span>
+              <div className="flex flex-wrap gap-2">
+                {availableSizes.map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setSelectedSize(size)}
+                    className={`h-8 min-w-9 rounded border px-2 ${
+                      selectedSize === size
+                        ? "border-(--color-primary-btn) bg-(--color-primary-btn) text-white"
+                        : "border-black/30 bg-white text-(--color-text-1)"
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : null}
 
           <div className="mt-6 flex items-center justify-between gap-3">
             <div className="flex h-10 items-center rounded border border-black/30">
