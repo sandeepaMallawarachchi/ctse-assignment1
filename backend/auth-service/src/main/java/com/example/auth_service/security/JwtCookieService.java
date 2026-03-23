@@ -15,7 +15,7 @@ public class JwtCookieService {
         return ResponseCookie.from(jwtProperties.getCookieName(), token)
                 .httpOnly(true)
                 .secure(jwtProperties.isCookieSecure())
-                .sameSite("Lax")
+                .sameSite("None")
                 .path("/")
                 .maxAge(jwtProperties.getExpirationMinutes() * 60)
                 .build();
@@ -25,7 +25,7 @@ public class JwtCookieService {
         return ResponseCookie.from(jwtProperties.getCookieName(), "")
                 .httpOnly(true)
                 .secure(jwtProperties.isCookieSecure())
-                .sameSite("Lax")
+                .sameSite("None")
                 .path("/")
                 .maxAge(0)
                 .build();
