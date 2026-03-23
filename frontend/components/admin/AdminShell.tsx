@@ -130,7 +130,9 @@ export default function AdminShell({ children }: { children: ReactNode }) {
       </header>
 
       <div className="mx-auto grid min-h-[calc(100vh-129px)] max-w-[1440px] lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-[129px] left-0 z-30 w-[280px] border-r border-black/10 bg-white px-5 py-6 transition-transform lg:static lg:translate-x-0`}>
+        <aside
+          className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-[129px] left-0 z-30 w-[280px] border-r border-black/10 bg-white px-5 py-6 transition-transform lg:sticky lg:top-[129px] lg:h-[calc(100vh-129px)] lg:translate-x-0 lg:self-start`}
+        >
           <nav className="mt-8 space-y-2">
             {navItems.map(({ href, label, icon: Icon }) => {
               const active = pathname === href;

@@ -32,6 +32,21 @@ export interface CartData {
   appliedCoupon: AppliedCoupon | null;
 }
 
+function formatCartApiError(status: number, bodyText: string) {
+  try {
+    const parsed = JSON.parse(bodyText) as { message?: string };
+    const message = parsed.message?.trim();
+    if (message?.startsWith("Invalid coupon code:")) {
+      return "The coupon code you entered is invalid or expired.";
+    }
+    if (message) return message;
+  } catch {
+    // Fall through to generic text handling when the body is not JSON.
+  }
+
+  return bodyText.trim() || `Cart API error ${status}`;
+}
+
 export function mapResponse(response: CartApiResponse): CartData {
   const items: CartItem[] = (response?.items ?? []).map((item) => ({
     productId: item.productId,
@@ -72,7 +87,7 @@ async function authFetch(
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "Unknown error");
-    throw new Error(`Cart API error ${res.status}: ${text}`);
+    throw new Error(formatCartApiError(res.status, text));
   }
   const body = await res.json();
   return body.data as CartApiResponse;

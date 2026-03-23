@@ -3,10 +3,14 @@
 import { Heart, Minus, Plus, RefreshCcw, Star, Truck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import type { Product } from "@/components/products/ProductCard";
 import { formatLkr } from "@/lib/currency";
+import { addCartItem } from "@/store/cartSlice";
+import { useAppDispatch } from "@/store/hooks";
 import RelatedProducts from "./RelatedProducts";
 
 export type ProductDetails = {
@@ -62,6 +66,9 @@ function Rating({
 }
 
 export default function ProductDetailsView({ product, relatedProducts }: ProductDetailsViewProps) {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const { showToast } = useToast();
   const galleryImages = useMemo(() => {
     const normalized = product.gallery.filter((image) => Boolean(image?.trim()));
     return normalized.length > 0 ? normalized : ["/products/p1.webp"];
@@ -79,6 +86,33 @@ export default function ProductDetailsView({ product, relatedProducts }: Product
     () => formatLkr(product.price, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     [product.price]
   );
+
+  const handleBuyNow = async () => {
+    try {
+      await dispatch(
+        addCartItem({
+          productId: String(product.id),
+          productName: product.name,
+          price: product.price,
+          imageUrl: selectedImage,
+          quantity,
+        })
+      ).unwrap();
+
+      showToast({
+        title: "Added to cart",
+        description: `${product.name} is ready in your cart.`,
+        variant: "success",
+      });
+      router.push("/cart");
+    } catch (error) {
+      showToast({
+        title: "Could not continue to cart",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "error",
+      });
+    }
+  };
 
   return (
     <section className="mx-auto max-w-[1240px] px-4 py-20 md:px-8">
@@ -174,7 +208,7 @@ export default function ProductDetailsView({ product, relatedProducts }: Product
               </button>
             </div>
 
-            <Button variant="primary" size="lg" className="h-10 px-8 w-full">
+            <Button variant="primary" size="lg" className="h-10 w-full px-8" onClick={handleBuyNow}>
               Buy Now
             </Button>
 
