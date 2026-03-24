@@ -1,0 +1,29 @@
+name: Product Catalog Service CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/product-catelog-service/**"
+      - ".github/workflows/product-catelog-service.yml"
+      - ".github/workflows/_backend-service-deploy.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/product-catelog-service/**"
+      - ".github/workflows/product-catelog-service.yml"
+      - ".github/workflows/_backend-service-deploy.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_backend-service-deploy.yml
+    with:
+      service_name: product-catelog-service
+      service_dir: backend/product-catelog-service
+      ecr_repository: ctse/product-catelog-service
+      ecs_service: ${{ vars.ECS_SERVICE_PRODUCT }}
+      aws_region: ${{ vars.AWS_REGION }}
+      ecs_cluster: ${{ vars.ECS_CLUSTER }}
+    secrets: inherit
+
