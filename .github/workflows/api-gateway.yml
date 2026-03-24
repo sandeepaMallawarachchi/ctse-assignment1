@@ -1,17 +1,17 @@
-name: Cart Order Service CI/CD
+name: API Gateway CI/CD
 
 on:
   push:
     branches: [main]
     paths:
-      - "backend/cart-order-service/**"
-      - ".github/workflows/cart-order-service.yml"
+      - "backend/api-gateway/**"
+      - ".github/workflows/api-gateway.yml"
       - ".github/workflows/_backend-service-deploy.yml"
   pull_request:
     branches: [main]
     paths:
-      - "backend/cart-order-service/**"
-      - ".github/workflows/cart-order-service.yml"
+      - "backend/api-gateway/**"
+      - ".github/workflows/api-gateway.yml"
       - ".github/workflows/_backend-service-deploy.yml"
   workflow_dispatch:
 
@@ -19,10 +19,10 @@ jobs:
   deploy:
     uses: ./.github/workflows/_backend-service-deploy.yml
     with:
-      service_name: cart-order-service
-      service_dir: backend/cart-order-service
-      ecr_repository: ctse/cart-order-service
-      ecs_service: ${{ vars.ECS_SERVICE_CART_ORDER }}
+      service_name: api-gateway
+      service_dir: backend/api-gateway
+      ecr_repository: ctse/api-gateway
+      ecs_service: ${{ vars.ECS_SERVICE_API_GATEWAY }}
       aws_region: ${{ vars.AWS_REGION }}
       ecs_cluster: ${{ vars.ECS_CLUSTER }}
     secrets: inherit
