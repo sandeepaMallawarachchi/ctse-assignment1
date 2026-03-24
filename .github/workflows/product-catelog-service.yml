@@ -26,4 +26,3 @@ jobs:
       aws_region: ${{ vars.AWS_REGION }}
       ecs_cluster: ${{ vars.ECS_CLUSTER }}
     secrets: inherit
-
