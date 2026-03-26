@@ -5,6 +5,7 @@ import lombok.Getter;
 
 import java.time.Instant;
 
+// Generic API response wrapper used to standardize all HTTP responses.
 @Getter
 @Builder
 public class ApiResponse<T> {
