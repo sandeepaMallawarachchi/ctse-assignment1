@@ -283,7 +283,7 @@ function AllProductsPageContent() {
     <section className="mx-auto max-w-[1240px] px-4 py-12 md:px-8">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
-          <h1 className="font-semibold text-(--color-text-1)">All Products</h1>
+          <h1 className="font-semibold text-(--color-text-1)">All Products test</h1>
           <p className="mt-2 text-(--color-text-2)">
             {loading ? "Loading products..." : `${filteredProducts.length} products found`}
           </p>
